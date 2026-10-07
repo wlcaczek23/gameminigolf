@@ -33,7 +33,7 @@
 
 <script>
 // ── Nastavení, které by v reálu přišlo z tvého backendu ─────────
-const PAR_TABLE = [2, 3, 3, 3, 3, 3, 3, 4, 4];         // musí odpovídat HOLES v game.js
+const PAR_TABLE = [2, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 4, 4, 4, 3, 4, 5, 5];   // musí odpovídat HOLES v game.js
 const REWARDS = { completion: 0, underPar: 2, perStrokeUnderPar: 0, holeInOne: 1 };
 
 const frame = document.getElementById('game');
@@ -56,7 +56,7 @@ function serverValidateAndCredit(r) {
     const h = r.holes[i];
     if (h.par !== PAR_TABLE[i] || !Number.isInteger(h.strokes) || h.strokes < 1 || h.strokes > PAR_TABLE[i] + 5) return { ok: false, message: 'Neplatný výsledek.' };
   }
-  if (r.durationMs < 9 * 4000) return { ok: false, message: 'Hra byla příliš rychlá.' };
+  if (r.durationMs < PAR_TABLE.length * 4000) return { ok: false, message: 'Hra byla příliš rychlá.' };
   usedNonces.add(r.nonce);
   if (document.getElementById('daily').checked) return { ok: false, message: 'Dnešní odměnu už máš – zítra zas!' };
 

@@ -182,6 +182,7 @@ canvas{display:block;touch-action:none;}
 
 .scorecard{width:100%;display:grid;grid-template-columns:40px repeat(9,1fr) 30px;gap:3px;font-size:.72rem;text-align:center;}
 .scorecard div{padding:4px 0;border-radius:5px;font-weight:900;}
+.scorecard + .scorecard{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.1);}
 .scorecard .lbl{text-align:left;color:var(--muted);font-size:.62rem;letter-spacing:.5px;}
 .scorecard .h{color:var(--muted);}
 .scorecard .c{background:rgba(255,255,255,.06);}

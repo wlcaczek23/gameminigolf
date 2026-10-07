@@ -68,6 +68,24 @@ mergeConfig(window.FOTBALGOLF_CONFIG);
 // ═══════════════════════════════════════════════════════
 const DW = 100, DH = 160;
 const RECT = [[8, 8], [92, 8], [92, 152], [8, 152]];
+const r2 = (v) => Math.round(v * 100) / 100;
+// body oblouku (úhly v radiánech, y míří dolů)
+function arc(cx, cy, r, a0, a1, n) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) { const a = a0 + ((a1 - a0) * i) / n; pts.push([r2(cx + Math.cos(a) * r), r2(cy + Math.sin(a) * r)]); }
+  return pts;
+}
+const smooth = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
+// zakřivená dráha: střední čára fn(t), t ∈ 0…1, s poloviční šířkou half
+function ribbon(fn, n, half) {
+  const L = [], R = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, [x, y] = fn(t), [xa, ya] = fn(Math.max(0, t - 0.002)), [xb, yb] = fn(Math.min(1, t + 0.002));
+    const l = Math.hypot(xb - xa, yb - ya) || 1, nx = -(yb - ya) / l, ny = (xb - xa) / l;
+    L.push([r2(x + nx * half), r2(y + ny * half)]); R.push([r2(x - nx * half), r2(y - ny * half)]);
+  }
+  return L.concat(R.reverse());
+}
 
 const HOLES = [
   { name: 'Rozcvička', par: 2, poly: RECT, tee: [50, 140], cup: [50, 24],
@@ -109,7 +127,7 @@ const HOLES = [
     tee: [72, 142], cup: [28, 22],
     zones: [{ t: 'sand', shape: 'ellipse', x: 19, y: 95, rx: 10, ry: 7 }],
     obs: [{ t: 'tree', x: 40, y: 80, r: 6 }, { t: 'tree', x: 74, y: 74, r: 6 }, { t: 'log', a: [8, 44], b: [28, 39], r: 1.8 }] },
-  { name: 'Velké finále', par: 4, poly: RECT, tee: [50, 144], cup: [50, 20],
+  { name: 'Most přes potok', par: 4, poly: RECT, tee: [50, 144], cup: [50, 20],
     zones: [
       { t: 'water', shape: 'rect', x: 8, y: 98, w: 32, h: 12, r: 1 },
       { t: 'water', shape: 'rect', x: 60, y: 98, w: 32, h: 12, r: 1 },
@@ -121,6 +139,121 @@ const HOLES = [
       { t: 'bumper', x: 30, y: 70, r: 5 }, { t: 'bumper', x: 70, y: 70, r: 5 }, { t: 'bumper', x: 50, y: 55, r: 5 },
       { t: 'hay', x: 35, y: 26, r: 6 }, { t: 'hay', x: 65, y: 26, r: 6 },
     ] },
+  // ── ZADNÍ DEVÍTKA – těžší: zatáčky, voda, mosty ─────────
+  { name: 'Rozcestník', par: 3,                      // podle náčrtku: L s cedulí, sloupkem a kládami
+    poly: [[8, 152], [40, 152], [40, 74], ...arc(70, 52, 22, Math.PI / 2, -Math.PI / 2, 14), ...arc(20, 42, 12, -Math.PI / 2, -Math.PI, 6)],
+    tee: [24, 140], cup: [83, 52],
+    decor: [{ t: 'arrow', p: [[20, 98], [16, 70], [33, 61]] }],
+    obs: [
+      { t: 'board', a: [12, 50], b: [30, 38] },
+      { t: 'rail', a: [40, 74], b: [40, 57], r: 1.6 },
+      { t: 'log', a: [48, 38], b: [60, 35], r: 1.8 }, { t: 'log', a: [64, 39], b: [77, 36], r: 1.8 },
+      { t: 'log', a: [50, 54], b: [56, 66], r: 1.8 }, { t: 'log', a: [64, 54], b: [70, 66], r: 1.8 },
+    ] },
+  { name: 'Ohrady', par: 3,                          // podle náčrtku: slalom mezi třemi ohradami
+    poly: [[18, 152], [82, 152], ...arc(50, 40, 32, 0, -Math.PI, 18)],
+    tee: [50, 142], cup: [50, 22], logo: [32, 134, 22],
+    decor: [{ t: 'arrow', p: [[66, 130], [70, 104], [46, 99]] }, { t: 'arrow', p: [[34, 74], [30, 57], [56, 60]] }],
+    obs: [
+      { t: 'fence', a: [18, 48], b: [52, 48] },
+      { t: 'fence', a: [48, 82], b: [82, 82] },
+      { t: 'fence', a: [18, 116], b: [52, 116] },
+    ] },
+  { name: 'Sedmička', par: 4,                        // podle náčrtku: zakřivená „sedmička“ s ohradami
+    poly: [[44, 152], [78, 152], [74, 120], [66, 96], [60, 78], [62, 62], ...arc(73, 43, 19, Math.PI / 2, -Math.PI / 2, 14),
+      ...arc(22, 36, 12, -Math.PI / 2, -Math.PI, 6), [10, 44], [16, 72], [30, 100], [40, 124]],
+    tee: [61, 142], cup: [80, 43], logo: false,
+    decor: [{ t: 'arrow', p: [[48, 130], [42, 112], [58, 107]] }, { t: 'arrow', p: [[30, 82], [28, 60], [44, 50]] }],
+    obs: [
+      { t: 'fence', a: [56, 134], b: [77, 134] },
+      { t: 'fence', a: [35, 116], b: [56, 116] },
+      { t: 'fence', a: [44, 98], b: [68, 98] },
+      { t: 'rock', x: 16, y: 52, r: 3.6 }, { t: 'rock', x: 27, y: 45, r: 3.2 }, { t: 'rock', x: 46, y: 56, r: 3 },
+      { t: 'hay', x: 56, y: 39, r: 6 },
+    ] },
+  { name: 'Dva mosty', par: 4,                       // řeka napříč – bezpečný most vpravo, riskantní zkratka vlevo
+    poly: RECT, tee: [34, 142], cup: [24, 24],
+    zones: [
+      { t: 'water', shape: 'poly', pts: [[8, 58], [92, 88], [92, 110], [8, 80]] },
+      { t: 'bridge', x: 8, y: 55, w: 16, h: 34 },
+      { t: 'bridge', x: 60, y: 72, w: 16, h: 36 },
+    ],
+    obs: [
+      { t: 'rail', a: [24, 55], b: [24, 89], r: 1 },
+      { t: 'rail', a: [60, 72], b: [60, 108], r: 1 }, { t: 'rail', a: [76, 72], b: [76, 108], r: 1 },
+      { t: 'rock', x: 20, y: 108, r: 3.4 }, { t: 'tyre', x: 42, y: 30, r: 5 }, { t: 'bumper', x: 70, y: 40, r: 5 },
+      { t: 'cone', x: 50, y: 128 }, { t: 'cone', x: 58, y: 124 },
+    ] },
+  { name: 'Hadí stezka', par: 4,                     // esíčko – rovně to nejde
+    poly: ribbon((t) => {
+      const e = smooth(t / 0.15) * smooth((1 - t) / 0.15);
+      return [50 + 24 * e * Math.sin(TAU * t), 150 - 138 * t];
+    }, 64, 14),
+    tee: [53, 142], cup: [45, 23], logo: false,
+    zones: [
+      { t: 'water', shape: 'ellipse', x: 84, y: 115, rx: 3.5, ry: 7 },
+      { t: 'water', shape: 'ellipse', x: 16, y: 47, rx: 3.5, ry: 7 },
+      { t: 'sand', shape: 'ellipse', x: 56, y: 32, rx: 7, ry: 5 },
+    ],
+    obs: [{ t: 'tyre', x: 50, y: 81, r: 3.6 }, { t: 'cone', x: 66, y: 98 }, { t: 'cone', x: 34, y: 64 }] },
+  { name: 'Ostrov', par: 3,                          // jamka na ostrově, přístup jen po mostě za mlýnkem
+    poly: RECT, tee: [50, 142], cup: [50, 48], logo: [50, 129, 22],
+    zones: [
+      { t: 'water', shape: 'rect', x: 8, y: 30, w: 84, h: 56, r: 2 },
+      { t: 'island', shape: 'ellipse', x: 50, y: 50, rx: 20, ry: 14 },
+      { t: 'bridge', x: 40, y: 62, w: 20, h: 26 },
+    ],
+    obs: [
+      { t: 'rail', a: [40, 64], b: [40, 88], r: 1 }, { t: 'rail', a: [60, 64], b: [60, 88], r: 1 },
+      { t: 'spinner', x: 50, y: 110, len: 13, arms: 3, r: 1.4, w: 0.03 },
+    ] },
+  { name: 'Otočka', par: 4,                          // nahoru, otočka kolem přepážky a dolů přes most
+    poly: [[8, 8], [92, 8], [92, 152], [54, 152], ...arc(50, 50, 4, 0, -Math.PI, 6), [46, 152], [8, 152]],
+    tee: [73, 142], cup: [27, 130], logo: [73, 126, 24],
+    decor: [{ t: 'arrow', p: [[82, 56], [86, 22], [62, 18]] }],
+    zones: [
+      { t: 'boost', x: 64, y: 100, w: 18, h: 16, dir: [0, -1] },
+      { t: 'water', shape: 'rect', x: 8, y: 88, w: 38, h: 12, r: 1 },
+      { t: 'bridge', x: 17, y: 85, w: 20, h: 18 },
+    ],
+    obs: [
+      { t: 'slider', y: 72, cx: 73, amp: 8, half: 8, r: 1.6, w: 0.025, ph: 0 },
+      { t: 'bumper', x: 50, y: 24, r: 4.5 }, { t: 'tyre', x: 24, y: 32, r: 5 },
+      { t: 'rail', a: [17, 85], b: [17, 103], r: 1 }, { t: 'rail', a: [37, 85], b: [37, 103], r: 1 },
+    ] },
+  { name: 'Serpentina', par: 5,                      // tři patra tam a zpátky
+    poly: [[8, 152], [92, 152], [92, 116], [40, 116], [40, 100], [92, 100], [92, 8], [8, 8], [8, 48], [60, 48], [60, 64], [8, 64]],
+    tee: [76, 136], cup: [20, 28], logo: false,
+    decor: [{ t: 'arrow', p: [[22, 112], [17, 94], [30, 84]] }, { t: 'arrow', p: [[72, 60], [74, 40], [58, 33]] }],
+    zones: [
+      { t: 'water', shape: 'rect', x: 34, y: 116, w: 20, h: 36, r: 1 },
+      { t: 'bridge', x: 31, y: 124, w: 26, h: 20, dir: 'h' },
+      { t: 'sand', shape: 'rect', x: 68, y: 66, w: 24, h: 32, r: 6 },
+    ],
+    obs: [
+      { t: 'rail', a: [31, 124], b: [57, 124], r: 1 }, { t: 'rail', a: [31, 144], b: [57, 144], r: 1 },
+      { t: 'log', a: [26, 70], b: [34, 88], r: 1.8 }, { t: 'log', a: [48, 78], b: [55, 95], r: 1.8 },
+      { t: 'tyre', x: 40, y: 16, r: 4 }, { t: 'tyre', x: 40, y: 42, r: 4 }, { t: 'cone', x: 78, y: 24 },
+    ] },
+  { name: 'Velké finále', par: 5,                    // tři potoky, tři mosty, každý jinde
+    poly: RECT, tee: [50, 143], cup: [50, 20], logo: [24, 141, 20],
+    zones: [
+      { t: 'water', shape: 'rect', x: 8, y: 122, w: 84, h: 8, r: 1 },
+      { t: 'water', shape: 'rect', x: 8, y: 84, w: 84, h: 8, r: 1 },
+      { t: 'water', shape: 'rect', x: 8, y: 44, w: 84, h: 8, r: 1 },
+      { t: 'bridge', x: 64, y: 119, w: 20, h: 14 },
+      { t: 'bridge', x: 16, y: 81, w: 20, h: 14 },
+      { t: 'bridge', x: 40, y: 41, w: 20, h: 14 },
+      { t: 'sand', shape: 'rect', x: 40, y: 100, w: 20, h: 16, r: 5 },
+    ],
+    obs: [
+      { t: 'rail', a: [64, 119], b: [64, 133], r: 1 }, { t: 'rail', a: [84, 119], b: [84, 133], r: 1 },
+      { t: 'rail', a: [16, 81], b: [16, 95], r: 1 }, { t: 'rail', a: [36, 81], b: [36, 95], r: 1 },
+      { t: 'rail', a: [40, 41], b: [40, 55], r: 1 }, { t: 'rail', a: [60, 41], b: [60, 55], r: 1 },
+      { t: 'slider', y: 68, cx: 50, amp: 18, half: 10, r: 1.6, w: 0.022, ph: 0 },
+      { t: 'cone', x: 82, y: 104 }, { t: 'cone', x: 18, y: 112 },
+      { t: 'hay', x: 35, y: 22, r: 5.5 }, { t: 'hay', x: 65, y: 22, r: 5.5 },
+    ] },
 ];
 const TOTAL_PAR = HOLES.reduce((a, h) => a + h.par, 0);
 const strokeLimit = (h) => h.par + 4;       // po vyčerpání se jamka zapíše za limit + 1
@@ -131,8 +264,8 @@ const strokeLimit = (h) => h.par + 4;       // po vyčerpání se jamka zapíše
 const BALL_R = 3.2, CUP_R = 4.8, WALL_R = 1.3;
 const MAX_SPEED = 4.6, FRICTION = 0.982, SAND_FRICTION = 0.925, STOP_SPEED = 0.035;
 const BOOST_ACC = 0.32, OSC_SPEED = 0.0125, STEP_MS = 1000 / 60;
-const REST = { wall: 0.68, tyre: 0.85, hay: 0.42, tree: 0.5, rock: 0.55, cone: 0.5, molehill: 0.42, log: 0.55, rail: 0.6 };
-const DEFAULT_R = { cone: 2.2 };
+const REST = { wall: 0.68, tyre: 0.85, hay: 0.42, tree: 0.5, rock: 0.55, cone: 0.5, molehill: 0.42, log: 0.55, rail: 0.6, fence: 0.5, board: 0.5 };
+const DEFAULT_R = { cone: 2.2, fence: 1.8, board: 2.6 };
 
 // ═══════════════════════════════════════════════════════
 //  STAV
@@ -230,6 +363,7 @@ function polyPath(P) { const p = new Path2D(); P.forEach(([x, y], i) => (i ? p.l
 function zonePath(z) {
   const p = new Path2D();
   if (z.shape === 'ellipse') p.ellipse(z.x, z.y, z.rx, z.ry, 0, 0, TAU);
+  else if (z.shape === 'poly') return polyPath(z.pts);
   else if (z.t === 'hill') p.arc(z.x, z.y, z.r, 0, TAU);
   else rrect(p, z.x, z.y, z.w, z.h, z.r ?? 2);
   return p;
@@ -237,9 +371,22 @@ function zonePath(z) {
 function inZone(z, x, y) {
   if (z.t === 'hill') return Math.hypot(x - z.x, y - z.y) < z.r;
   if (z.shape === 'ellipse') { const a = (x - z.x) / z.rx, b = (y - z.y) / z.ry; return a * a + b * b <= 1; }
+  if (z.shape === 'poly') return pointInPoly(x, y, z.pts);
   return x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h;
 }
 function circle(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, TAU); }
+// obdélník, který zónu obepíná: [x, y, w, h]
+function zoneBox(z) {
+  if (z.shape === 'ellipse') return [z.x - z.rx, z.y - z.ry, z.rx * 2, z.ry * 2];
+  if (z.shape === 'poly') {
+    const xs = z.pts.map((p) => p[0]), ys = z.pts.map((p) => p[1]);
+    const x0 = Math.min(...xs), y0 = Math.min(...ys);
+    return [x0, y0, Math.max(...xs) - x0, Math.max(...ys) - y0];
+  }
+  return [z.x, z.y, z.w, z.h];
+}
+// most nebo ostrov – míč na nich do vody nespadne
+const onDryLand = (x, y) => hole.zones.some((z) => (z.t === 'bridge' || z.t === 'island') && inZone(z, x, y));
 
 // ═══════════════════════════════════════════════════════
 //  ZVUK (syntéza přes WebAudio, žádné soubory)
@@ -386,6 +533,12 @@ function loadHole(i) {
   hole.zones = hole.zones || [];
   hole.obs = hole.obs || [];
   hole.zones.forEach((z) => { z.path = zonePath(z); });
+  const dry = hole.zones.filter((z) => z.t === 'bridge' || z.t === 'island');
+  hole.dryPath = null;
+  if (dry.length) {                                  // oblast „všude kromě mostů a ostrovů“ (pro třpyt vody)
+    hole.dryPath = new Path2D(); hole.dryPath.rect(-50, -50, DW + 100, DH + 100);
+    dry.forEach((z) => hole.dryPath.addPath(z.path));
+  }
   hole.obs.forEach((o) => { if (o.r == null) o.r = DEFAULT_R[o.t] || 3; });
   hole.path = polyPath(hole.poly);
   cup = { x: def.cup[0], y: def.cup[1] };
@@ -667,7 +820,7 @@ function physics() {
   let sp = Math.hypot(ball.vx, ball.vy);
   if (sp > MAX_SPEED * 1.25) { const k = (MAX_SPEED * 1.25) / sp; ball.vx *= k; ball.vy *= k; sp = MAX_SPEED * 1.25; }
 
-  for (const z of hole.zones) if (z.t === 'water' && inZone(z, ball.x, ball.y)) { splash(); return; }
+  if (!onDryLand(ball.x, ball.y)) for (const z of hole.zones) if (z.t === 'water' && inZone(z, ball.x, ball.y)) { splash(); return; }
 
   // padne do jamky?
   {
@@ -712,7 +865,7 @@ function collide() {
   }
   for (const o of hole.obs) {
     switch (o.t) {
-      case 'log': case 'rail': hitCapsule(o.a[0], o.a[1], o.b[0], o.b[1], o.r, REST[o.t], 0, 0, 'wood'); break;
+      case 'log': case 'rail': case 'fence': case 'board': hitCapsule(o.a[0], o.a[1], o.b[0], o.b[1], o.r, REST[o.t], 0, 0, 'wood'); break;
       case 'slider': hitCapsule(o.x1, o.y, o.x2, o.y, o.r, 0.6, o.vx, 0, 'metal'); break;
       case 'spinner':
         hitCircle(o.x, o.y, 2.4, 0.5, 'metal');
@@ -813,7 +966,7 @@ function buildStatic() {
     c.fillStyle = rng() < 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,50,0,0.07)';
     c.fillRect(rng() * DW, rng() * DH, 0.35, 0.35);
   }
-  if (cfg.courseLogo && logoImg.ok) {               // logo „namalované“ na trávníku
+  if (cfg.courseLogo && logoImg.ok && HOLES[holeIdx].logo !== false) {   // logo „namalované“ na trávníku
     const def = HOLES[holeIdx];
     const [lx, ly, lw] = def.logo || [def.tee[0], def.tee[1] - 23, 30];
     const lh = (lw * logoImg.naturalHeight) / logoImg.naturalWidth;
@@ -823,6 +976,7 @@ function buildStatic() {
     c.restore();
   }
   for (const z of hole.zones) drawZoneStatic(c, z, rng);
+  for (const d of hole.decor || []) if (d.t === 'arrow') drawArrow(c, d.p);
   drawTee(c);
   for (const o of hole.obs) {
     if (o.t === 'slider') {
@@ -849,7 +1003,10 @@ function buildStatic() {
   c.strokeStyle = '#7b4a22'; c.lineWidth = 2.6; c.stroke(path);
   c.strokeStyle = '#b77a3e'; c.lineWidth = 1.3; c.stroke(path);
   c.strokeStyle = 'rgba(255,220,170,0.35)'; c.lineWidth = 0.35; c.stroke(path);
-  for (const [x, y] of P) {
+  for (let i = 0; i < P.length; i++) {               // sloupky jen v ostrých rozích
+    const [x, y] = P[i], [px, py] = P[(i + P.length - 1) % P.length], [nx, ny] = P[(i + 1) % P.length];
+    const turn = Math.abs(Math.atan2((x - px) * (ny - y) - (y - py) * (nx - x), (x - px) * (nx - x) + (y - py) * (ny - y)));
+    if (turn < 0.5) continue;
     c.fillStyle = '#5e3517'; circle(c, x, y, 1.7); c.fill();
     c.fillStyle = '#a06a35'; circle(c, x - 0.3, y - 0.3, 0.8); c.fill();
   }
@@ -862,8 +1019,7 @@ function drawZoneStatic(c, z, rng) {
   if (z.t === 'sand') {
     c.save();
     c.fillStyle = '#e8cf92'; c.fill(z.path); c.clip(z.path);
-    const bx = z.shape === 'ellipse' ? z.x - z.rx : z.x, by = z.shape === 'ellipse' ? z.y - z.ry : z.y;
-    const bw = z.shape === 'ellipse' ? z.rx * 2 : z.w, bh = z.shape === 'ellipse' ? z.ry * 2 : z.h;
+    const [bx, by, bw, bh] = zoneBox(z);
     for (let i = 0; i < bw * bh * 0.6; i++) {
       c.fillStyle = rng() < 0.5 ? 'rgba(170,130,60,0.35)' : 'rgba(255,248,220,0.55)';
       c.fillRect(bx + rng() * bw, by + rng() * bh, 0.35, 0.35);
@@ -879,7 +1035,7 @@ function drawZoneStatic(c, z, rng) {
     c.strokeStyle = 'rgba(255,245,210,0.55)'; c.lineWidth = 0.5; c.stroke(z.path);
   } else if (z.t === 'water') {
     c.strokeStyle = '#cdb67c'; c.lineWidth = 2.4; c.stroke(z.path);
-    const by = z.shape === 'ellipse' ? z.y - z.ry : z.y, bh = z.shape === 'ellipse' ? z.ry * 2 : z.h;
+    const [, by, , bh] = zoneBox(z);
     const g = c.createLinearGradient(0, by, 0, by + bh);
     g.addColorStop(0, '#5fbdf0'); g.addColorStop(1, '#1d6fa5');
     c.fillStyle = g; c.fill(z.path);
@@ -916,11 +1072,26 @@ function drawZoneStatic(c, z, rng) {
   } else if (z.t === 'bridge') {
     c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(z.x + 0.5, z.y + 0.8, z.w, z.h);
     c.fillStyle = '#b07a43'; c.fillRect(z.x, z.y, z.w, z.h);
-    for (let y = z.y; y < z.y + z.h; y += 2) {
-      c.fillStyle = (y - z.y) % 4 ? '#c08a51' : '#a8723d'; c.fillRect(z.x, y, z.w, 1.8);
+    const across = z.dir === 'h';                    // prkna jdou napříč směru jízdy
+    const span = across ? z.w : z.h;
+    for (let k = 0; k < span; k += 2) {
+      c.fillStyle = k % 4 ? '#c08a51' : '#a8723d';
+      if (across) c.fillRect(z.x + k, z.y, 1.8, z.h); else c.fillRect(z.x, z.y + k, z.w, 1.8);
     }
     c.fillStyle = 'rgba(60,30,10,0.5)';
-    for (let y = z.y + 0.9; y < z.y + z.h; y += 2) { circle(c, z.x + 2.5, y, 0.22); c.fill(); circle(c, z.x + z.w - 2.5, y, 0.22); c.fill(); }
+    for (let k = 0.9; k < span; k += 2) {
+      if (across) { circle(c, z.x + k, z.y + 2.5, 0.22); c.fill(); circle(c, z.x + k, z.y + z.h - 2.5, 0.22); c.fill(); }
+      else { circle(c, z.x + 2.5, z.y + k, 0.22); c.fill(); circle(c, z.x + z.w - 2.5, z.y + k, 0.22); c.fill(); }
+    }
+  } else if (z.t === 'island') {
+    c.strokeStyle = '#d9c48d'; c.lineWidth = 2.6; c.stroke(z.path);
+    const [bx, by, bw, bh] = zoneBox(z);
+    const g = c.createRadialGradient(bx + bw * 0.4, by + bh * 0.35, 1, bx + bw / 2, by + bh / 2, Math.max(bw, bh) / 2);
+    g.addColorStop(0, '#74d063'); g.addColorStop(1, '#4fae44');
+    c.fillStyle = g; c.fill(z.path);
+    c.save(); c.clip(z.path);
+    for (let y = by, i = 0; y < by + bh; y += 3, i++) { c.fillStyle = i % 2 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.04)'; c.fillRect(bx, y, bw, 3); }
+    c.restore();
   }
 }
 
@@ -947,6 +1118,8 @@ function drawObstacle(c, o) {
     case 'molehill': return drawMolehill(c, o);
     case 'log': return drawLog(c, o, false);
     case 'rail': return drawLog(c, o, true);
+    case 'fence': return drawFence(c, o);
+    case 'board': return drawBoard(c, o);
     case 'bumper': return drawBumper(c, o);
     case 'spinner': return drawSpinner(c, o);
     case 'slider': return drawSlider(c, o);
@@ -1054,6 +1227,54 @@ function drawLog(c, o, isRail) {
   }
   c.restore();
 }
+function drawFence(c, o) {                         // dřevěná ohrada: dvě latě a sloupky
+  const [ax, ay] = o.a, [bx, by] = o.b, len = Math.hypot(bx - ax, by - ay);
+  c.save();
+  c.translate(ax, ay); c.rotate(Math.atan2(by - ay, bx - ax));
+  c.fillStyle = 'rgba(0,0,0,0.28)'; c.beginPath(); rrect(c, -0.6, -0.8, len + 2, 3.8, 1); c.fill();
+  for (const yy of [-1.15, 0.45]) {
+    const g = c.createLinearGradient(0, yy, 0, yy + 0.95);
+    g.addColorStop(0, '#dca46a'); g.addColorStop(1, '#8a5527');
+    c.fillStyle = g; c.beginPath(); rrect(c, -0.7, yy, len + 1.4, 0.95, 0.3); c.fill();
+    c.strokeStyle = 'rgba(70,35,10,0.6)'; c.lineWidth = 0.15; c.stroke();
+  }
+  const n = Math.max(1, Math.round(len / 9));
+  for (let i = 0; i <= n; i++) {
+    const x = (len * i) / n;
+    c.fillStyle = '#6e4120'; c.beginPath(); rrect(c, x - 0.9, -1.9, 1.8, 3.8, 0.35); c.fill();
+    c.fillStyle = '#b07a43'; c.fillRect(x - 0.6, -1.7, 1.2, 0.6);
+  }
+  c.restore();
+}
+function drawBoard(c, o) {                         // cedule ze tří prken
+  const [ax, ay] = o.a, [bx, by] = o.b, len = Math.hypot(bx - ax, by - ay), r = o.r, h = (r * 2) / 3;
+  c.save();
+  c.translate(ax, ay); c.rotate(Math.atan2(by - ay, bx - ax));
+  c.fillStyle = 'rgba(0,0,0,0.32)'; c.beginPath(); rrect(c, -r + 0.7, -r + 1.3, len + r * 2, r * 2, 0.8); c.fill();
+  ['#c99357', '#b47d45', '#c48a4f'].forEach((col, i) => {
+    const y = -r + i * h;
+    c.fillStyle = col; c.beginPath(); rrect(c, -r - (i === 1 ? 0.6 : 0), y, len + r * 2 + (i === 1 ? 1 : 0), h - 0.15, 0.3); c.fill();
+    c.strokeStyle = 'rgba(80,40,12,0.65)'; c.lineWidth = 0.18; c.stroke();
+    c.strokeStyle = 'rgba(90,50,20,0.25)'; c.lineWidth = 0.12;
+    c.beginPath(); c.moveTo(-r + 1, y + h * 0.45); c.quadraticCurveTo(len / 2, y + h * 0.2, len + r - 1, y + h * 0.55); c.stroke();
+    c.fillStyle = '#3b2a1a'; circle(c, -r + 0.9, y + h / 2, 0.22); c.fill(); circle(c, len + r - 0.9, y + h / 2, 0.22); c.fill();
+  });
+  c.restore();
+}
+function drawArrow(c, [[x0, y0], [cx, cy], [x1, y1]]) {   // červená šipka namalovaná na trávě
+  c.save();
+  c.lineCap = 'round';
+  c.shadowColor = 'rgba(255,40,30,0.55)'; c.shadowBlur = 5 * dpr;
+  const g = c.createLinearGradient(x0, y0, x1, y1);
+  g.addColorStop(0, 'rgba(200,20,20,0)'); g.addColorStop(0.35, 'rgba(214,32,24,0.85)'); g.addColorStop(1, '#e8261c');
+  c.strokeStyle = g; c.lineWidth = 2.1;
+  c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo(cx, cy, x1, y1); c.stroke();
+  let dx = x1 - cx, dy = y1 - cy;
+  const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+  c.fillStyle = '#e8261c';
+  c.beginPath(); c.moveTo(x1 + dx * 3.4, y1 + dy * 3.4); c.lineTo(x1 - dy * 2.5, y1 + dx * 2.5); c.lineTo(x1 + dy * 2.5, y1 - dx * 2.5); c.closePath(); c.fill();
+  c.restore();
+}
 function drawBumper(c, o) {
   const { x, y, r } = o;
   shadow(c, x, y, r);
@@ -1114,8 +1335,8 @@ function render() {
   for (const z of hole.zones) {
     if (z.t === 'water') {
       c.save(); c.clip(z.path);
-      const bx = z.shape === 'ellipse' ? z.x - z.rx : z.x, by = z.shape === 'ellipse' ? z.y - z.ry : z.y;
-      const bw = z.shape === 'ellipse' ? z.rx * 2 : z.w, bh = z.shape === 'ellipse' ? z.ry * 2 : z.h;
+      if (hole.dryPath) c.clip(hole.dryPath, 'evenodd');
+      const [bx, by, bw, bh] = zoneBox(z);
       c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 0.35;
       const rows = Math.max(2, Math.round(bh / 4));
       for (let i = 0; i < rows; i++) {
@@ -1277,12 +1498,13 @@ function drawAim(c) {
 // ═══════════════════════════════════════════════════════
 //  UI (DOM)
 // ═══════════════════════════════════════════════════════
-const hud = { hole: $('#st-hole'), par: $('#st-par'), str: $('#st-str'), score: $('#st-score') };
+const hud = { holes: $('#st-holes'), hole: $('#st-hole'), par: $('#st-par'), str: $('#st-str'), score: $('#st-score') };
 const powerFill = $('#powerbar-fill'), hintEl = $('#hint');
 let lastPowerPct = -1;
 
 function updateHUD() {
   hud.hole.textContent = holeIdx + 1;
+  hud.holes.textContent = '/' + HOLES.length;
   hud.par.textContent = hole ? hole.par : '-';
   hud.str.textContent = strokes;
   hud.str.className = hole && strokes >= strokeLimit(hole) - 1 ? 'warn' : '';
@@ -1419,13 +1641,18 @@ function verdictFor(diff) {
 function showEnd(res, isRecord) {
   const v = verdictFor(res.scoreToPar);
   const scoreColor = res.scoreToPar < 0 ? '#8fd11a' : res.scoreToPar > 0 ? '#ff6b5b' : '#ffffff';
-  const cells = (fn) => res.holes.map(fn).join('');
-  const card = `
+  const nines = [];
+  for (let i = 0; i < res.holes.length; i += 9) nines.push(res.holes.slice(i, i + 9));
+  const sum = (hs, k) => hs.reduce((a, h) => a + h[k], 0);
+  const card = nines.map((hs) => {
+    const cells = (fn) => hs.map(fn).join('');
+    return `
     <div class="scorecard">
       <div class="lbl">Jamka</div>${cells((s) => `<div class="h">${s.hole}</div>`)}<div class="h">Σ</div>
-      <div class="lbl">Par</div>${cells((s) => `<div class="h">${s.par}</div>`)}<div class="h">${res.totalPar}</div>
-      <div class="lbl">Ty</div>${cells((s) => `<div class="c ${s.holeInOne ? 'hio' : s.strokes < s.par ? 'under' : s.strokes > s.par ? 'over' : ''}">${s.strokes}</div>`)}<div class="sum">${res.totalStrokes}</div>
+      <div class="lbl">Par</div>${cells((s) => `<div class="h">${s.par}</div>`)}<div class="h">${sum(hs, 'par')}</div>
+      <div class="lbl">Ty</div>${cells((s) => `<div class="c ${s.holeInOne ? 'hio' : s.strokes < s.par ? 'under' : s.strokes > s.par ? 'over' : ''}">${s.strokes}</div>`)}<div class="sum">${sum(hs, 'strokes')}</div>
     </div>`;
+  }).join('');
   const R = res.rewards;
   const rewardsHtml = cfg.rewardsEnabled && R.total > 0 ? `
     <div class="card rewards${appConnected ? '' : ' offline'}">
@@ -1517,18 +1744,24 @@ async function createShareImage(res) {
     else c.fillText(String(val), bx + bw / 2, by + 94);
   });
 
-  const n = res.holes.length, cw = 86, cx0 = S / 2 - ((n - 1) * cw) / 2;
-  res.holes.forEach((s, i) => {
-    const x = cx0 + i * cw, y = 860;
-    c.fillStyle = s.holeInOne ? GOLD : s.strokes < s.par ? LIME : s.strokes > s.par ? '#ff8a7a' : 'rgba(255,255,255,0.85)';
-    c.beginPath(); c.arc(x, y, 31, 0, TAU); c.fill();
-    c.fillStyle = '#0a1206'; c.font = `46px ${BB}`; c.fillText(String(s.strokes), x, y + 16);
+  const rows = [];
+  for (let k = 0; k < res.holes.length; k += 9) rows.push(res.holes.slice(k, k + 9));
+  const two = rows.length > 1, cr = two ? 27 : 31, cw = two ? 80 : 86;
+  rows.forEach((row, ri) => {
+    const cx0 = S / 2 - ((row.length - 1) * cw) / 2, y = two ? 832 + ri * 64 : 860;
+    row.forEach((s, i) => {
+      const x = cx0 + i * cw;
+      c.fillStyle = s.holeInOne ? GOLD : s.strokes < s.par ? LIME : s.strokes > s.par ? '#ff8a7a' : 'rgba(255,255,255,0.85)';
+      c.beginPath(); c.arc(x, y, cr, 0, TAU); c.fill();
+      c.fillStyle = '#0a1206'; c.font = `${two ? 40 : 46}px ${BB}`; c.fillText(String(s.strokes), x, y + (two ? 14 : 16));
+    });
   });
+  const ctaY = two ? 972 : 955;
 
   c.font = `800 32px ${NU}`; c.fillStyle = 'rgba(255,255,255,0.9)';
-  c.fillText(`Dokážeš to líp? Zahraj si v aplikaci ${cfg.brand.name}! 🏆`, S / 2, 955);
+  c.fillText(`Dokážeš to líp? Zahraj si v aplikaci ${cfg.brand.name}! 🏆`, S / 2, ctaY);
   c.font = `700 22px ${NU}`; c.fillStyle = 'rgba(255,255,255,0.35)';
-  c.fillText([cfg.website, new Date(res.finishedAt).toLocaleDateString('cs-CZ')].filter(Boolean).join('  ·  '), S / 2, 1005);
+  c.fillText([cfg.website, new Date(res.finishedAt).toLocaleDateString('cs-CZ')].filter(Boolean).join('  ·  '), S / 2, ctaY + 46);
   return cv;
 }
 
@@ -1653,6 +1886,19 @@ window.Fotbalgolf._dev = {
   get holeIdx() { return holeIdx; }, get hole() { return hole; },
   loadHole: (i) => { loadHole(i); state = 'play'; overlay.classList.add('hidden'); },
   shoot: (angle, p) => { aimAngle = angle; power = p; shoot(); },
+  // zkusí úder nanečisto a vrátí stav do původního (pro testovacího bota)
+  sim: (angle, p) => {
+    const snap = { b: Object.assign({}, ball), tick, state, strokes, shotActive, lastShot: Object.assign({}, lastShot), n: scores.length, endTimer, sinking };
+    aimAngle = angle; power = p; shoot();
+    let n = 0;
+    while (state === 'play' && ballMoving() && n++ < 4000) update();
+    const out = { x: ball.x, y: ball.y, state };
+    Object.assign(ball, snap.b); tick = snap.tick; state = snap.state; strokes = snap.strokes; shotActive = snap.shotActive;
+    lastShot = snap.lastShot; scores.length = snap.n; endTimer = snap.endTimer; sinking = snap.sinking;
+    particles = []; trail = []; ripples = []; updateMovers(); updateHUD();
+    return out;
+  },
+  inZone, segNearest, holes: HOLES,
   step: (n) => { for (let i = 0; i < n; i++) update(); },
   pointInPoly,
 };
