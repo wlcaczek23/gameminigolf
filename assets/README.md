@@ -1,7 +1,11 @@
-# Logo na míčku
+# Grafika Výsledkomatu
 
-Sem nahraj logo, které se kreslí na míček: **`assets/ball.png`**
-(čtvercový PNG, ideálně 120×120 px nebo víc, kulaté logo).
+| Soubor | Kde se používá |
+|---|---|
+| `logo.png` | horní lišta, úvodní menu, logo „namalované“ na trávníku u odpaliště, sdílený obrázek |
+| `coin.png` | mince = měna odměn: ikony u odměn, točící se mince, vyletující mince, sdílený obrázek, favicon |
 
-Dokud tu soubor není, hra kreslí klasický černobílý fotbalový míč.
-Jinou cestu (nebo data URI) lze nastavit přes `ballImage` v konfiguraci – viz hlavní README.
+Výměna grafiky: nahraď soubory stejným názvem (PNG s průhledným pozadím),
+nebo nastav jiné cesty v konfiguraci (`brand.logo`, `currency.image`) – viz hlavní README.
+
+Volitelně lze na míček dát vlastní obrázek přes `ballImage` (prázdné = klasický fotbalový míč).

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   MINI FOTBALGOLF – SPORTPARK PAVLIŠOV   v2
+   VÝSLEDKOMAT · MINI FOTBALGOLF   v2
    Hra + most (bridge) pro připisování odměn do aplikace.
    Dokumentace integrace: README.md
    ═══════════════════════════════════════════════════════════════ */
@@ -17,25 +17,27 @@ const $ = (s) => document.querySelector(s);
 //  nebo zprávou {type:'init', config:{...}} z aplikace.
 // ═══════════════════════════════════════════════════════
 const cfg = {
-  appName: 'aplikaci',                 // „Odměny se připisují v {appName}“
+  appName: 'aplikaci Výsledkomat',     // „Odměny se připisují v {appName}“
+  brand: { name: 'Výsledkomat', logo: 'assets/logo.png' },
+  courseLogo: true,                    // logo „namalované“ na trávníku u odpaliště
   app: false,                          // true = běží uvnitř aplikace (odměny se odešlou)
   rewardsEnabled: true,
   rewardNotice: '',                    // např. „Dnešní odměnu už máš – hraj pro radost!“
-  currency: { icon: '⭐', name: 'bodů' },
+  currency: { name: 'mincí', forms: ['mince', 'mince', 'mincí'], image: 'assets/coin.png', icon: '🪙' },
   rewards: {
     completion: 0,                     // za dohrání všech 9 jamek (0 = bez odměny)
     underPar: 2,                       // za celkový výsledek pod PAR
     perStrokeUnderPar: 0,              // + za každý úder pod PAR (0 = bez odměny)
     holeInOne: 1,                      // + za každou jamku na 1 úder
   },
-  ballImage: 'assets/ball.png',        // logo na míčku (když chybí, kreslí se fotbalový míč)
+  ballImage: '',                       // obrázek na míčku (prázdné = kreslí se fotbalový míč)
   playerName: '',
   userId: null,
   nonce: null,                         // jednorázový token ze serveru – vrací se ve výsledku
   targetOrigin: '*',                   // komu posílat postMessage (iframe)
   hostOrigin: null,                    // od koho přijímat zprávy (iframe), null = od kohokoli
   showCloseButton: false,
-  website: 'www.fotbalgolfpavlisov.cz',
+  website: '',                         // např. 'www.vysledkomat.cz' – zobrazí se v menu a na sdíleném obrázku
 };
 
 function mergeConfig(src) {
@@ -140,7 +142,7 @@ const wrap = $('#canvas-wrap'), overlay = $('#overlay');
 const staticCv = document.createElement('canvas'), sctx = staticCv.getContext('2d');
 
 let W = 1, H = 1, dpr = 1, scale = 1, offX = 0, offY = 0;
-let view = { k: 1, ox: 0, oy: 0 };
+let view = { k: 1, ox: 0, oy: 0 }, vignette = null;
 
 let state = 'menu';                 // menu | play | holed | splash | end
 let tick = 0, holeIdx = 0, hole = null, cup = { x: 0, y: 0 };
@@ -151,14 +153,27 @@ let particles = [], trail = [], ripples = [];
 let appConnected = false, rewardState = 'none', rewardReply = null, rewardTimer = 0;
 const ball = { x: 0, y: 0, vx: 0, vy: 0, rot: 0, scale: 1, visible: true };
 
-const ballImg = new Image();
-let ballImgReady = false;
-function loadBallImage(src) {
-  ballImgReady = false;
-  if (!src) return;
-  ballImg.onload = () => { ballImgReady = ballImg.naturalWidth > 0; };
-  ballImg.onerror = () => { ballImgReady = false; };
-  ballImg.src = src;
+function loadImg(src, onload) {
+  const im = new Image();
+  im.ok = false;
+  if (!src) return im;
+  if (/^https?:/i.test(src) && !src.startsWith(location.origin)) im.crossOrigin = 'anonymous';   // ať jde obrázek sdílet
+  im.onload = () => { im.ok = im.naturalWidth > 0; if (im.ok && onload) onload(); };
+  im.src = src;
+  return im;
+}
+const imgDone = (im) => (im.complete || !im.src ? Promise.resolve() : new Promise((r) => { im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true }); }));
+let ballImg = loadImg('');
+let logoImg = loadImg('');
+let coinImg = loadImg('');
+function loadBallImage(src) { ballImg = loadImg(src); }
+function loadBrandImages() {
+  logoImg = loadImg(cfg.brand.logo, () => buildStatic());
+  coinImg = loadImg(cfg.currency.image);
+  const img = document.getElementById('brand-img');
+  if (img) { img.hidden = !cfg.brand.logo; if (cfg.brand.logo) img.src = cfg.brand.logo; }
+  const nm = document.getElementById('brand-name');
+  if (nm) nm.textContent = String(cfg.brand.name || '').toLocaleUpperCase('cs');
 }
 
 const store = {
@@ -319,10 +334,11 @@ function handleInbound(raw, origin) {
   }
 }
 function applyInit(conf) {
-  const prevImg = cfg.ballImage;
+  const prev = [cfg.ballImage, cfg.brand.logo, cfg.brand.name, cfg.currency.image].join('|');
   mergeConfig(conf);
   appConnected = true;
-  if (cfg.ballImage !== prevImg) loadBallImage(cfg.ballImage);
+  if (cfg.ballImage !== prev.split('|')[0]) loadBallImage(cfg.ballImage);
+  if ([cfg.ballImage, cfg.brand.logo, cfg.brand.name, cfg.currency.image].join('|') !== prev) loadBrandImages();
   syncCloseButton();
   if (state === 'menu') renderMenu();
 }
@@ -352,6 +368,9 @@ function resize() {
   scale = Math.min(W / (DW + PAD * 2), H / (DH + PAD * 2));
   offX = (W - DW * scale) / 2; offY = (H - DH * scale) / 2;
   view = { k: dpr * scale, ox: offX * dpr, oy: offY * dpr };
+  const cw = canvas.width, ch = canvas.height;
+  vignette = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.38, cw / 2, ch / 2, Math.max(cw, ch) * 0.72);
+  vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.42)');
   buildStatic();
 }
 
@@ -426,6 +445,9 @@ function onHoled() {
   showToast(v.t, `${strokes} ${strokesWord(strokes)} · ${fmtDiff(strokes - hole.par)}`, v.c);
   Sound.cup(); buzz(hio ? [40, 60, 40, 60, 80] : [30, 40, 60]);
   confetti(cup.x, cup.y, hio ? 70 : 36);
+  if (hio && cfg.rewardsEnabled && num(cfg.rewards.holeInOne) > 0) {
+    setTimeout(() => { floatReward(cup.x, cup.y - 6, cfg.rewards.holeInOne); Sound.coin(); }, 350);
+  }
   finishHole(strokes, 'holed');
 }
 
@@ -528,18 +550,18 @@ function handleRewardResult(r) {
 function renderRewardStatus() {
   const el = $('#reward-status');
   if (!el) return;
-  const icon = esc(cfg.currency.icon), r = rewardReply || {};
+  const icon = coinHtml(), r = rewardReply || {};
   let text = '', cls = '';
   switch (rewardState) {
-    case 'offline': text = `Odměny se připisují jen při hraní v ${esc(cfg.appName)}.`; break;
-    case 'pending': text = '⏳ Připisuji odměnu do aplikace…'; break;
+    case 'offline': text = `Mince se připisují jen při hraní v ${esc(cfg.appName)}.`; break;
+    case 'pending': text = '⏳ Připisuji mince do aplikace…'; break;
     case 'sent': text = '📨 Výsledek byl odeslán do aplikace.'; break;
     case 'ok':
       cls = 'ok';
-      text = '✅ ' + (r.message ? esc(r.message) : r.credited != null ? `Připsáno +${num(r.credited)} ${icon}` : 'Odměna připsána do aplikace!');
+      text = '✅ ' + (r.message ? esc(r.message) : r.credited != null ? `Připsáno +${num(r.credited)} ${icon}` : 'Mince připsány do aplikace!');
       if (r.balance != null) text += ` · Zůstatek: ${num(r.balance)} ${icon}`;
       break;
-    case 'error': cls = 'error'; text = '⚠️ ' + (r.message ? esc(r.message) : 'Odměnu se nepodařilo připsat.'); break;
+    case 'error': cls = 'error'; text = '⚠️ ' + (r.message ? esc(r.message) : 'Mince se nepodařilo připsat.'); break;
     default: break;
   }
   el.className = cls;
@@ -718,7 +740,7 @@ function spawn(x, y, col, n, { speed = 1, g = 0, size = 0.6 } = {}) {
   }
 }
 function confetti(x, y, n) {
-  const cols = ['#ffd34d', '#9be15d', '#ffffff', '#e63946', '#4fb3e8'];
+  const cols = ['#f2c230', '#8fd11a', '#ffffff', '#1a1a1a', '#c4f25a'];
   for (let i = 0; i < n && particles.length < 400; i++) {
     const a = Math.random() * TAU, s = 0.5 + Math.random() * 1.6;
     particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 0.6, life: 1, decay: 0.012 + Math.random() * 0.012, col: cols[i % cols.length], r: 0.6 + Math.random() * 0.7, g: 0.025, sq: true, rot: Math.random() * TAU });
@@ -788,6 +810,15 @@ function buildStatic() {
   for (let i = 0; i < 700; i++) {
     c.fillStyle = rng() < 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,50,0,0.07)';
     c.fillRect(rng() * DW, rng() * DH, 0.35, 0.35);
+  }
+  if (cfg.courseLogo && logoImg.ok) {               // logo „namalované“ na trávníku
+    const def = HOLES[holeIdx];
+    const [lx, ly, lw] = def.logo || [def.tee[0], def.tee[1] - 23, 30];
+    const lh = (lw * logoImg.naturalHeight) / logoImg.naturalWidth;
+    c.save();
+    c.globalAlpha = 0.16; c.drawImage(logoImg, lx - lw / 2, ly - lh / 2, lw, lh);
+    c.globalAlpha = 0.08; c.globalCompositeOperation = 'lighter'; c.drawImage(logoImg, lx - lw / 2, ly - lh / 2, lw, lh);
+    c.restore();
   }
   for (const z of hole.zones) drawZoneStatic(c, z, rng);
   drawTee(c);
@@ -1123,6 +1154,26 @@ function render() {
     else { circle(c, p.x, p.y, p.r * (0.4 + p.life * 0.6)); c.fill(); }
   }
   c.globalAlpha = 1;
+  drawCloudShadows(c);
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  if (vignette) { c.fillStyle = vignette; c.fillRect(0, 0, canvas.width, canvas.height); }
+}
+
+// pomalu plující stíny mraků – hřiště „žije“
+const CLOUD = [[0, 0, 16, 9], [12, -4, 12, 8], [-12, 3, 11, 7], [5, 6, 13, 7]];
+function drawCloudShadows(c) {
+  c.fillStyle = 'rgba(0,25,0,0.08)';
+  for (let i = 0; i < 3; i++) {
+    const x = ((tick * 0.025 + i * 75) % 230) - 65, y = 25 + i * 52 + Math.sin(i * 2.1) * 10;
+    c.beginPath();
+    for (const [dx, dy, rx, ry] of CLOUD) { c.moveTo(x + dx + rx, y + dy); c.ellipse(x + dx, y + dy, rx, ry, 0, 0, TAU); }
+    c.fill();
+  }
+}
+function sparkle(c, x, y, r) {
+  c.beginPath();
+  c.moveTo(x, y - r); c.quadraticCurveTo(x, y, x + r, y); c.quadraticCurveTo(x, y, x, y + r);
+  c.quadraticCurveTo(x, y, x - r, y); c.quadraticCurveTo(x, y, x, y - r); c.fill();
 }
 
 function drawCup(c) {
@@ -1133,6 +1184,12 @@ function drawCup(c) {
   c.fillStyle = g; circle(c, x, y, CUP_R); c.fill();
   c.fillStyle = 'rgba(0,0,0,0.55)'; c.beginPath(); c.arc(x, y, CUP_R, Math.PI * 1.1, Math.PI * 1.9); c.arc(x + 0.4, y + 0.9, CUP_R * 0.9, Math.PI * 1.9, Math.PI * 1.1, true); c.fill();
   c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = 0.5; circle(c, x, y, CUP_R); c.stroke();
+  for (let k = 0; k < 4; k++) {                    // zlaté jiskry kolem jamky
+    const a = tick * 0.015 + (k * TAU) / 4, rr = CUP_R + 3.4 + Math.sin(tick * 0.05 + k) * 0.8;
+    const t = (Math.sin(tick * 0.11 + k * 1.7) + 1) / 2;
+    c.fillStyle = `rgba(255,214,90,${0.2 + 0.65 * t})`;
+    sparkle(c, x + Math.cos(a) * rr, y + Math.sin(a) * rr, 0.5 + t * 0.9);
+  }
 }
 function drawFlag(c) {
   const { x, y } = cup, ph = 15, w = 9, h = 6, t = tick * 0.08;
@@ -1143,11 +1200,13 @@ function drawFlag(c) {
   for (let i = 10; i >= 0; i--) { const u = i / 10; c.lineTo(x + u * w, y - ph + h - u * 0.8 + Math.sin(t + u * 3) * u * 1.1); }
   c.closePath();
   const g = c.createLinearGradient(x, 0, x + w, 0);
-  g.addColorStop(0, '#c1121f'); g.addColorStop(1, '#ff4d5a');
+  g.addColorStop(0, '#0d0d0d'); g.addColorStop(1, '#3a3a3a');
   c.fillStyle = g; c.fill();
-  c.fillStyle = '#ffffff'; c.font = '900 4px Nunito, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.strokeStyle = '#8fd11a'; c.lineWidth = 0.35; c.stroke();
+  c.fillStyle = '#c4f25a'; c.font = '900 4px Nunito, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillText(String(holeIdx + 1), x + w * 0.45, y - ph + h / 2 - 0.3 + Math.sin(t + 1.35) * 0.5);
-  c.fillStyle = '#ffd34d'; circle(c, x, y - ph, 0.8); c.fill();
+  c.fillStyle = '#ffffff'; circle(c, x, y - ph, 0.85); c.fill();
+  c.strokeStyle = '#111'; c.lineWidth = 0.25; c.stroke();
 }
 function drawTrail(c) {
   if (trail.length < 2) return;
@@ -1170,7 +1229,7 @@ function drawBall(c) {
   c.save();
   c.translate(x, y); circle(c, 0, 0, r); c.clip();
   c.rotate(ball.rot);
-  if (ballImgReady) c.drawImage(ballImg, -r, -r, r * 2, r * 2);
+  if (ballImg.ok) c.drawImage(ballImg, -r, -r, r * 2, r * 2);
   else {
     c.fillStyle = '#fafafa'; c.fillRect(-r, -r, r * 2, r * 2);
     c.fillStyle = '#1b1f24'; pentagon(c, 0, 0, r * 0.38, -Math.PI / 2);
@@ -1258,13 +1317,58 @@ function showToast(main, sub, color) {
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
 }
 
+// ── mince ────────────────────────────────────────────
+function coinsWord(n) { const f = cfg.currency.forms; return Array.isArray(f) && f.length === 3 ? plural(n, f[0], f[1], f[2]) : cfg.currency.name; }
+function coinHtml(cls = '') {
+  const img = cfg.currency.image;
+  return img ? `<img class="coin ${cls}" src="${esc(img)}" alt="${esc(cfg.currency.name)}">` : `<span class="coin ${cls}">${esc(cfg.currency.icon)}</span>`;
+}
+const amountHtml = (n) => `<b class="amt">+${num(n)} ${coinHtml()}</b>`;
 function rewardRowsHtml(items) {
-  const icon = esc(cfg.currency.icon);
-  return items.map((i) => `<div class="rrow"><span>${esc(i.label)}</span><b>+${num(i.amount)} ${icon}</b></div>`).join('');
+  return items.map((i) => `<div class="rrow"><span>${esc(i.label)}</span>${amountHtml(i.amount)}</div>`).join('');
+}
+function coinSkyHtml(n) {
+  if (!cfg.currency.image) return '';
+  let h = '<div class="coin-sky" aria-hidden="true">';
+  for (let i = 0; i < n; i++) {
+    const x = (i * 37 + 7) % 96, d = 9 + (i % 4) * 3, w = 20 + ((i * 13) % 26), del = -((i * 2.3) % 12);
+    h += `<img src="${esc(cfg.currency.image)}" alt="" style="left:${x}%;width:${w}px;animation-duration:${d}s;animation-delay:${del}s">`;
+  }
+  return h + '</div>';
+}
+// mince vyletí z místa na obrazovce (souřadnice v návrhovém prostoru)
+function floatReward(x, y, amount) {
+  const el = document.createElement('div');
+  el.className = 'float-reward';
+  el.style.left = (offX + x * scale) + 'px';
+  el.style.top = (offY + y * scale) + 'px';
+  el.innerHTML = `+${num(amount)} ${coinHtml()}`;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 1900);
+}
+function coinBurst(count) {
+  if (!cfg.currency.image) return;
+  const box = document.createElement('div');
+  box.className = 'coin-burst';
+  for (let i = 0; i < count; i++) {
+    const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.5, d = 90 + Math.random() * 120;
+    const im = document.createElement('img');
+    im.src = cfg.currency.image; im.alt = '';
+    im.style.setProperty('--tx', `${Math.cos(a) * d}px`);
+    im.style.setProperty('--ty', `${Math.sin(a) * d}px`);
+    im.style.animationDelay = `${i * 35}ms`;
+    box.appendChild(im);
+  }
+  wrap.appendChild(box);
+  setTimeout(() => box.remove(), 2600);
+}
+function brandHeroHtml() {
+  const logo = cfg.brand.logo;
+  return logo ? `<div class="brand-hero" style="--logo-mask:url('${esc(logo)}')"><img src="${esc(logo)}" alt="${esc(cfg.brand.name)}"></div>` : '';
 }
 
 function renderMenu() {
-  const R = cfg.rewards, icon = esc(cfg.currency.icon);
+  const R = cfg.rewards;
   const best = store.get('fotbalgolf_best_v2');
   const teaser = [
     ['Dohraj všech ' + HOLES.length + ' jamek', R.completion],
@@ -1273,18 +1377,19 @@ function renderMenu() {
     ['Hole-in-one (jamka na 1 úder)', R.holeInOne],
   ].filter(([, a]) => num(a) > 0);
   const note = cfg.rewardNotice ? esc(cfg.rewardNotice)
-    : !appConnected ? `Odměny se připisují, když hraješ v ${esc(cfg.appName)}.` : '';
+    : !appConnected ? `Mince se připisují, když hraješ v ${esc(cfg.appName)}.` : '';
   const rewardsHtml = cfg.rewardsEnabled && teaser.length ? `
     <div class="card rewards${appConnected ? '' : ' offline'}">
-      <div class="card-title">🎁 Odměny ${appConnected ? 'do aplikace' : ''}</div>
-      ${teaser.map(([l, a]) => `<div class="rrow"><span>${esc(l)}</span><b>+${num(a)} ${icon}</b></div>`).join('')}
+      <div class="card-title">${coinHtml('spin')} Získej ${esc(coinsWord(2))}</div>
+      ${teaser.map(([l, a]) => `<div class="rrow"><span>${esc(l)}</span>${amountHtml(a)}</div>`).join('')}
       ${note ? `<div class="rnote">${note}</div>` : ''}
     </div>` : '';
   overlay.innerHTML = `
+    ${coinSkyHtml(9)}
     <div class="panel">
-      <div class="ball-badge">⚽</div>
+      ${brandHeroHtml()}
       <h1>MINI<br>FOTBALGOLF</h1>
-      <div class="sub">SPORTPARK PAVLIŠOV</div>
+      <div class="sub">${esc(String(cfg.brand.name || '').toLocaleUpperCase('cs'))}</div>
       ${cfg.playerName ? `<div class="hello">Ahoj, ${esc(cfg.playerName)}! 👋</div>` : ''}
       <div class="card howto">
         <div>👆 <b>Drž prst</b> a miř – síla se sama mění</div>
@@ -1302,16 +1407,16 @@ function renderMenu() {
 }
 
 function verdictFor(diff) {
-  if (diff <= -4) return { t: '🏆 Profík!', c: '#ffd34d' };
-  if (diff < 0) return { t: '⭐ Pod PAR!', c: '#9be15d' };
+  if (diff <= -4) return { t: '🏆 Profík!', c: '#f2c230' };
+  if (diff < 0) return { t: '⭐ Pod PAR!', c: '#8fd11a' };
   if (diff === 0) return { t: '✅ Přesně PAR', c: '#ffffff' };
-  if (diff <= 4) return { t: '👍 Dobrá hra!', c: '#cfe5c8' };
+  if (diff <= 4) return { t: '👍 Dobrá hra!', c: '#d8e6cf' };
   return { t: '😄 Příště lépe!', c: '#ff9f6b' };
 }
 
 function showEnd(res, isRecord) {
   const v = verdictFor(res.scoreToPar);
-  const scoreColor = res.scoreToPar < 0 ? '#9be15d' : res.scoreToPar > 0 ? '#ff6b5b' : '#ffffff';
+  const scoreColor = res.scoreToPar < 0 ? '#8fd11a' : res.scoreToPar > 0 ? '#ff6b5b' : '#ffffff';
   const cells = (fn) => res.holes.map(fn).join('');
   const card = `
     <div class="scorecard">
@@ -1322,13 +1427,12 @@ function showEnd(res, isRecord) {
   const R = res.rewards;
   const rewardsHtml = cfg.rewardsEnabled && R.total > 0 ? `
     <div class="card rewards${appConnected ? '' : ' offline'}">
-      <div class="card-title">🎁 Tvoje odměny</div>
+      <div class="reward-hero">${coinHtml('spin')}<div><small>ZÍSKÁVÁŠ</small><b>+${R.total}</b><span>${esc(coinsWord(R.total))}</span></div></div>
       ${rewardRowsHtml(R.items)}
-      <div class="rtotal"><span>Celkem</span><b>+${R.total} ${esc(cfg.currency.icon)}</b></div>
       <div id="reward-status"></div>
     </div>` : cfg.rewardNotice ? `<div class="rnote">${esc(cfg.rewardNotice)}</div>`
     : cfg.rewardsEnabled && num(cfg.rewards.underPar) > 0
-      ? `<div class="rnote">Tentokrát bez odměny – zahraj pod PAR (méně než ${res.totalPar} úderů) a získej +${num(cfg.rewards.underPar)} ${esc(cfg.currency.icon)}</div>` : '';
+      ? `<div class="rnote">Tentokrát bez mincí – zahraj pod PAR (méně než ${res.totalPar} úderů) a získej +${num(cfg.rewards.underPar)} ${coinHtml()}</div>` : '';
 
   overlay.innerHTML = `
     <div class="panel">
@@ -1352,7 +1456,7 @@ function showEnd(res, isRecord) {
   const back = $('#btn-back');
   if (back) back.addEventListener('click', () => Bridge.send('close', { state }));
   renderRewardStatus();
-  if (R.total > 0 && appConnected) Sound.coin();
+  if (R.total > 0) { coinBurst(Math.min(24, 8 + R.total * 4)); Sound.coin(); }
   setPower(0); setHint();
 }
 
@@ -1361,57 +1465,68 @@ function showEnd(res, isRecord) {
 // ═══════════════════════════════════════════════════════
 async function createShareImage(res) {
   try { await document.fonts.ready; } catch (e) { /* bez fontů */ }
+  await Promise.all([imgDone(logoImg), imgDone(coinImg)]);
   const S = 1080, cv = document.createElement('canvas');
   cv.width = S; cv.height = S;
   const c = cv.getContext('2d');
   const BB = "'Bebas Neue', Impact, 'Arial Narrow', sans-serif", NU = "'Nunito', system-ui, sans-serif";
+  const LIME = '#8fd11a', GOLD = '#f2c230';
 
-  const bg = c.createLinearGradient(0, 0, 0, S);
-  bg.addColorStop(0, '#0b2a17'); bg.addColorStop(1, '#14452a');
+  const bg = c.createRadialGradient(S / 2, 0, 50, S / 2, S * 0.4, S * 0.95);
+  bg.addColorStop(0, '#20361a'); bg.addColorStop(1, '#070b06');
   c.fillStyle = bg; c.fillRect(0, 0, S, S);
-  c.save(); c.globalAlpha = 0.06; c.fillStyle = '#9be15d'; c.translate(S / 2, S / 2); c.rotate(-Math.PI / 8);
+  c.save(); c.globalAlpha = 0.05; c.fillStyle = LIME; c.translate(S / 2, S / 2); c.rotate(-Math.PI / 8);
   for (let x = -S; x < S; x += 90) c.fillRect(x, -S, 45, S * 2);
   c.restore();
-  c.strokeStyle = '#9be15d'; c.lineWidth = 12; c.beginPath(); rrect(c, 30, 30, S - 60, S - 60, 44); c.stroke();
+  const fr = c.createLinearGradient(0, 0, S, S);
+  fr.addColorStop(0, '#c4f25a'); fr.addColorStop(0.5, LIME); fr.addColorStop(1, '#4a7a08');
+  c.strokeStyle = fr; c.lineWidth = 12; c.beginPath(); rrect(c, 30, 30, S - 60, S - 60, 44); c.stroke();
 
   c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-  c.fillStyle = '#9be15d'; c.font = `92px ${BB}`; c.fillText('⚽ MINI FOTBALGOLF', S / 2, 150);
-  c.fillStyle = 'rgba(234,246,228,0.6)'; c.font = `800 28px ${NU}`; c.fillText('SPORTPARK PAVLIŠOV', S / 2, 196);
+  if (logoImg.ok) {
+    const lw = 300, lh = (lw * logoImg.naturalHeight) / logoImg.naturalWidth;
+    c.save(); c.shadowColor = 'rgba(143,209,26,0.45)'; c.shadowBlur = 30;
+    c.drawImage(logoImg, S / 2 - lw / 2, 62, lw, lh); c.restore();
+  }
+  c.fillStyle = LIME; c.font = `56px ${BB}`; c.fillText('MINI FOTBALGOLF', S / 2, 300);
 
   const v = verdictFor(res.scoreToPar);
-  c.font = `68px ${BB}`; c.fillStyle = v.c; c.fillText(v.t, S / 2, 292);
+  c.font = `60px ${BB}`; c.fillStyle = v.c; c.fillText(v.t, S / 2, 368);
 
-  const scoreColor = res.scoreToPar < 0 ? '#9be15d' : res.scoreToPar > 0 ? '#ff6b5b' : '#ffffff';
-  const glow = c.createRadialGradient(S / 2, 460, 0, S / 2, 460, 230);
-  glow.addColorStop(0, 'rgba(155,225,93,0.25)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
-  c.fillStyle = glow; c.beginPath(); c.arc(S / 2, 460, 230, 0, TAU); c.fill();
-  c.font = `300px ${BB}`; c.fillStyle = scoreColor; c.shadowColor = scoreColor; c.shadowBlur = 40;
-  c.fillText(fmtDiff(res.scoreToPar), S / 2, 565);
+  const scoreColor = res.scoreToPar < 0 ? LIME : res.scoreToPar > 0 ? '#ff6b5b' : '#ffffff';
+  const glow = c.createRadialGradient(S / 2, 520, 0, S / 2, 520, 200);
+  glow.addColorStop(0, 'rgba(143,209,26,0.22)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = glow; c.beginPath(); c.arc(S / 2, 520, 200, 0, TAU); c.fill();
+  c.font = `240px ${BB}`; c.fillStyle = scoreColor; c.shadowColor = scoreColor; c.shadowBlur = 40;
+  c.fillText(fmtDiff(res.scoreToPar), S / 2, 610);
   c.shadowBlur = 0;
-  c.font = `800 28px ${NU}`; c.fillStyle = 'rgba(234,246,228,0.55)'; c.fillText('SKÓRE VŮČI PAR', S / 2, 612);
+  c.font = `800 26px ${NU}`; c.fillStyle = 'rgba(238,246,230,0.55)'; c.fillText('SKÓRE VŮČI PAR', S / 2, 652);
 
-  const stats = [['ÚDERŮ', res.totalStrokes], ['PAR', res.totalPar], ['JAMEK', res.holes.length]];
+  const earned = res.rewards && res.rewards.total > 0 && coinImg.ok;
+  const stats = [['ÚDERŮ', res.totalStrokes], ['PAR', res.totalPar], earned ? ['ZÍSKÁNO', '+' + res.rewards.total] : ['JAMEK', res.holes.length]];
   const bw = 250, bh = 110, gap = 30, bx0 = (S - (stats.length * (bw + gap) - gap)) / 2;
   stats.forEach(([l, val], i) => {
-    const bx = bx0 + i * (bw + gap), by = 645;
-    c.fillStyle = 'rgba(155,225,93,0.12)'; c.beginPath(); rrect(c, bx, by, bw, bh, 18); c.fill();
-    c.strokeStyle = 'rgba(155,225,93,0.3)'; c.lineWidth = 2; c.stroke();
-    c.font = `800 20px ${NU}`; c.fillStyle = 'rgba(234,246,228,0.5)'; c.fillText(l, bx + bw / 2, by + 34);
-    c.font = `64px ${BB}`; c.fillStyle = '#ffffff'; c.fillText(String(val), bx + bw / 2, by + 94);
+    const bx = bx0 + i * (bw + gap), by = 682, coinBox = earned && i === 2;
+    c.fillStyle = coinBox ? 'rgba(242,194,48,0.14)' : 'rgba(143,209,26,0.10)'; c.beginPath(); rrect(c, bx, by, bw, bh, 18); c.fill();
+    c.strokeStyle = coinBox ? 'rgba(242,194,48,0.55)' : 'rgba(143,209,26,0.3)'; c.lineWidth = 2; c.stroke();
+    c.font = `800 20px ${NU}`; c.fillStyle = 'rgba(238,246,230,0.5)'; c.fillText(l, bx + bw / 2, by + 34);
+    c.font = `64px ${BB}`; c.fillStyle = coinBox ? GOLD : '#ffffff';
+    if (coinBox) { c.fillText(String(val), bx + bw / 2 - 28, by + 94); c.drawImage(coinImg, bx + bw / 2 + 18, by + 46, 56, 56); }
+    else c.fillText(String(val), bx + bw / 2, by + 94);
   });
 
-  const n = res.holes.length, cw = 88, cx0 = S / 2 - ((n - 1) * cw) / 2;
+  const n = res.holes.length, cw = 86, cx0 = S / 2 - ((n - 1) * cw) / 2;
   res.holes.forEach((s, i) => {
-    const x = cx0 + i * cw, y = 818;
-    c.fillStyle = s.holeInOne ? '#ffd34d' : s.strokes < s.par ? '#9be15d' : s.strokes > s.par ? '#ff8a7a' : 'rgba(255,255,255,0.85)';
-    c.beginPath(); c.arc(x, y, 32, 0, TAU); c.fill();
-    c.fillStyle = '#0b2a17'; c.font = `48px ${BB}`; c.fillText(String(s.strokes), x, y + 17);
+    const x = cx0 + i * cw, y = 860;
+    c.fillStyle = s.holeInOne ? GOLD : s.strokes < s.par ? LIME : s.strokes > s.par ? '#ff8a7a' : 'rgba(255,255,255,0.85)';
+    c.beginPath(); c.arc(x, y, 31, 0, TAU); c.fill();
+    c.fillStyle = '#0a1206'; c.font = `46px ${BB}`; c.fillText(String(s.strokes), x, y + 16);
   });
 
-  c.font = `800 34px ${NU}`; c.fillStyle = 'rgba(255,255,255,0.85)'; c.fillText('Dokážeš to líp? 🏆', S / 2, 925);
-  c.font = `800 30px ${NU}`; c.fillStyle = '#9be15d'; c.fillText(cfg.website, S / 2, 975);
-  c.font = `600 20px ${NU}`; c.fillStyle = 'rgba(255,255,255,0.3)';
-  c.fillText(new Date(res.finishedAt).toLocaleDateString('cs-CZ'), S / 2, 1022);
+  c.font = `800 32px ${NU}`; c.fillStyle = 'rgba(255,255,255,0.9)';
+  c.fillText(`Dokážeš to líp? Zahraj si v aplikaci ${cfg.brand.name}! 🏆`, S / 2, 955);
+  c.font = `700 22px ${NU}`; c.fillStyle = 'rgba(255,255,255,0.35)';
+  c.fillText([cfg.website, new Date(res.finishedAt).toLocaleDateString('cs-CZ')].filter(Boolean).join('  ·  '), S / 2, 1005);
   return cv;
 }
 
@@ -1423,14 +1538,14 @@ async function doShare() {
   try {
     const res = lastResult;
     const cv = await createShareImage(res);
-    const text = `⚽ Mini Fotbalgolf Pavlišov – moje skóre ${fmtDiff(res.scoreToPar)} (${res.totalStrokes} ${strokesWord(res.totalStrokes)}, PAR ${res.totalPar}). Dokážeš to líp? https://${cfg.website}`;
+    const text = `⚽ ${cfg.brand.name} · Mini Fotbalgolf – moje skóre ${fmtDiff(res.scoreToPar)} (${res.totalStrokes} ${strokesWord(res.totalStrokes)}, PAR ${res.totalPar}). Dokážeš to líp?${cfg.website ? ' https://' + cfg.website : ''}`;
     const blob = await new Promise((r) => { try { cv.toBlob(r, 'image/png'); } catch (e) { r(null); } });
     let file = null;
     try { file = blob ? new File([blob], 'fotbalgolf-vysledek.png', { type: 'image/png' }) : null; } catch (e) { file = null; }
 
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: 'Mini Fotbalgolf Pavlišov', text });
+        await navigator.share({ files: [file], title: `${cfg.brand.name} – Mini Fotbalgolf`, text });
         Bridge.send('share', { method: 'native', text });
         done(); return;
       } catch (e) { if (e && e.name === 'AbortError') { done(); return; } }
@@ -1521,6 +1636,7 @@ appConnected = cfg.app || Bridge.native();
 syncCloseButton();
 refreshSoundBtn();
 loadBallImage(cfg.ballImage);
+loadBrandImages();
 loadHole(0);
 resize();
 window.addEventListener('resize', () => { resize(); tellParentHeight(); });

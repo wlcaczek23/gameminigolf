@@ -1,14 +1,16 @@
-# ⚽ Mini Fotbalgolf – Sportpark Pavlišov (v2)
+# ⚽ Výsledkomat · Mini Fotbalgolf
 
 Mobilní mini hra fotbalgolfu (HTML5 canvas, bez závislostí). Hraje se 9 jamek, celkový **PAR 28**.
-Za výsledek **pod PAR** a za hole-in-one hra posílá odměny do tvé aplikace.
+Hra je v barvách a s logem aplikace **Výsledkomat**. Za výsledek **pod PAR** a za hole-in-one hráči získávají
+**mince**, které hra posílá do aplikace.
 
 | Soubor | Co to je |
 |---|---|
 | `index.html` | Hra (načítá `game.css` a `game.js`) |
 | `game.js` | Herní logika, fyzika, kreslení, most do aplikace |
 | `game.css` | Vzhled |
-| `assets/ball.png` | *(volitelné)* logo na míčku – viz `assets/README.md` |
+| `assets/logo.png` | logo Výsledkomatu (horní lišta, menu, trávník, sdílený obrázek) |
+| `assets/coin.png` | mince – měna odměn (ikony, animace, sdílený obrázek) |
 | `demo-app.html` | Ukázková „aplikace“ – ukazuje celé napojení odměn včetně ověření |
 
 Spuštění lokálně: `python3 -m http.server` a otevřít `http://localhost:8000/` (hra) nebo
@@ -51,12 +53,12 @@ Výchozí nastavení (vše se dá změnit z aplikace):
 | Za co | Odměna |
 |---|---|
 | Dohrání všech 9 jamek | bez odměny (`completion: 0`) |
-| Celkový výsledek **pod PAR** (méně než 28 úderů) | +2 ⭐ |
+| Celkový výsledek **pod PAR** (méně než 28 úderů) | +2 mince |
 | Navíc za každý úder pod PAR | bez odměny (`perStrokeUnderPar: 0`) |
-| Každá jamka na 1 úder (hole-in-one) | +1 ⭐ |
+| Každá jamka na 1 úder (hole-in-one) | +1 mince |
 
 Položky s hodnotou `0` se ve hře vůbec nezobrazují. Když hráč nezíská nic, uvidí na konci výzvu
-„zahraj pod PAR a získej +2 ⭐“.
+„zahraj pod PAR a získej +2 🪙“.
 
 Hra odměny jen **spočítá a zobrazí**. Skutečné připsání dělá aplikace / server po přijetí události
 `game_complete`. Když hra neběží v aplikaci (např. na webu), ukáže hláška „Odměny se připisují jen při hraní
@@ -94,13 +96,16 @@ Tři možnosti (lze kombinovat):
 ```js
 { type: 'init', config: {
     playerName: 'Tomáš', userId: '123', nonce: 'jednorazovy-token',
-    appName: 'aplikaci Sportpark',
-    currency: { icon: '⭐', name: 'bodů' },
+    appName: 'aplikaci Výsledkomat',
+    brand: { name: 'Výsledkomat', logo: 'assets/logo.png' },
+    currency: { name: 'mincí', forms: ['mince', 'mince', 'mincí'], image: 'assets/coin.png' },
+    website: 'www.vysledkomat.cz',   // volitelné – zobrazí se v menu a na sdíleném obrázku
+    courseLogo: true,                // logo namalované na trávníku
     rewards: { completion: 0, underPar: 2, perStrokeUnderPar: 0, holeInOne: 1 },
     rewardsEnabled: true,
     rewardNotice: '',            // např. 'Dnešní odměnu už máš – hraj pro radost!'
     showCloseButton: true,
-    ballImage: 'assets/ball.png' // nebo data:image/png;base64,...
+    ballImage: ''                    // obrázek na míčku (prázdné = fotbalový míč)
 } }
 ```
 
@@ -129,7 +134,7 @@ Ukázka `game_complete`:
   "completed": true, "totalStrokes": 25, "totalPar": 28, "scoreToPar": -3, "underPar": true,
   "holesInOne": 1,
   "holes": [ { "hole": 1, "name": "Rozcvička", "par": 2, "strokes": 1, "holeInOne": true, "pickedUp": false }, … ],
-  "rewards": { "currency": { "icon": "⭐", "name": "bodů" }, "total": 3,
+  "rewards": { "currency": { "name": "mincí", "image": "assets/coin.png" }, "total": 3,
                "items": [ { "id": "under_par", "label": "Výsledek pod PAR (25 < 28)", "amount": 2 },
                           { "id": "hole_in_one", "label": "Hole-in-one (1×)", "amount": 1 } ] },
   "isPersonalRecord": true
@@ -138,7 +143,7 @@ Ukázka `game_complete`:
 
 ### 3. Odpověď aplikace → hra
 
-Po připsání pošli zpět (hráč uvidí „✅ Připsáno +3 ⭐ · Zůstatek: 12 ⭐“):
+Po připsání pošli zpět (hráč uvidí „✅ Připsáno +3 🪙 · Zůstatek: 12 🪙“):
 
 ```js
 { type: 'reward_result', ok: true, credited: 3, balance: 12 }

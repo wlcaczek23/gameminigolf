@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ukázka integrace – Fotbalgolf</title>
+<title>Ukázka integrace – Výsledkomat</title>
 <style>
   :root{--bg:#0d1510;--panel:#14211a;--line:#25402f;--text:#e7f2e9;--muted:#8fae98;--gold:#ffd34d;--accent:#9be15d;}
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -23,10 +23,10 @@
   <div class="phone"><iframe id="game" src="index.html?app=1&close=1" title="Fotbalgolf"></iframe></div>
   <div class="side">
     <div class="card">
-      <h1>📱 Ukázková aplikace</h1>
+      <h1>📱 Ukázková aplikace Výsledkomat</h1>
       <p>Simuluje tvou aplikaci: pošle hře <code>init</code>, přijme <code>game_complete</code>, „na serveru“ ověří výsledek, připíše odměnu a vrátí <code>reward_result</code>.</p>
     </div>
-    <div class="card"><h2>Peněženka hráče</h2><div class="wallet"><span id="bal">0</span> ⭐</div></div>
+    <div class="card"><h2>Peněženka hráče</h2><div class="wallet"><span id="bal">0</span> <img src="assets/coin.png" alt="mince" style="height:1em;vertical-align:-.12em"></div></div>
     <div class="card"><label><input type="checkbox" id="daily"> Simulovat „odměnu za dnešek už má“</label></div>
     <div class="card"><h2>Události ze hry</h2><pre id="log"></pre></div>
   </div>
@@ -80,7 +80,7 @@ window.addEventListener('message', (e) => {
       currentNonce = crypto.randomUUID ? crypto.randomUUID() : String(Math.random());
       toGame({ type: 'init', config: {
         playerName: 'Tomáš', userId: 'demo-123', nonce: currentNonce,
-        appName: 'aplikaci Sportpark', rewards: REWARDS, currency: { icon: '⭐', name: 'bodů' },
+        appName: 'aplikaci Výsledkomat', rewards: REWARDS,
         showCloseButton: true,
       } });
       break;
