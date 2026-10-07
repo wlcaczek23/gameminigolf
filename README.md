@@ -1,0 +1,236 @@
+# ⚽ Mini Fotbalgolf – Sportpark Pavlišov (v2)
+
+Mobilní mini hra fotbalgolfu (HTML5 canvas, bez závislostí). Hraje se 9 jamek, celkový **PAR 28**.
+Za dohrání hry a za výsledek **pod PAR** hra posílá odměny do tvé aplikace.
+
+| Soubor | Co to je |
+|---|---|
+| `index.html` | Hra (načítá `game.css` a `game.js`) |
+| `game.js` | Herní logika, fyzika, kreslení, most do aplikace |
+| `game.css` | Vzhled |
+| `assets/ball.png` | *(volitelné)* logo na míčku – viz `assets/README.md` |
+| `demo-app.html` | Ukázková „aplikace“ – ukazuje celé napojení odměn včetně ověření |
+
+Spuštění lokálně: `python3 -m http.server` a otevřít `http://localhost:8000/` (hra) nebo
+`http://localhost:8000/demo-app.html` (ukázka napojení).
+
+---
+
+## Co je nového oproti v1
+
+**Vzhled**
+- Ostré vykreslení na všech displejích (retina), hřiště se vždy celé vejde a kruhy jsou opravdu kulaté.
+- Posekaný trávník s pruhy, dřevěné mantinely, stíny, keře a stromy kolem hřiště, kytičky.
+- Míč se při pohybu otáčí a táhne za sebou stopu; jamka s vlající vlajkou; konfety při trefě.
+- Nové UI: banner s názvem jamky, PAR v horní liště, animované hlášky (BIRDIE, EAGLE, HOLE IN ONE…),
+  výsledková karta po jamkách, osobní rekord, zvuky (lze vypnout 🔊) a vibrace.
+- Hra běží stejně rychle na 60 Hz i 120 Hz telefonech (dřív byla na 120 Hz 2× rychlejší).
+
+**Nové překážky a jamky**
+
+| # | Jamka | PAR | Překážky |
+|---|---|---|---|
+| 1 | Rozcvička | 2 | stěna z tréninkových kuželů |
+| 2 | Pískoviště | 3 | bunkr s pískem (brzdí), pneumatiky (odráží), balík sena |
+| 3 | Rybníček | 3 | rybník – **voda = +1 trestný úder** a návrat na místo úderu |
+| 4 | Mlýnek | 3 | otáčivý mlýnek v zúžené pasáži |
+| 5 | Zatáčka | 3 | L-zatáčka, urychlovací pás, odrazový bumper, pneumatiky před jamkou |
+| 6 | Posuvné brány | 3 | dvě pohyblivé závory + kužely |
+| 7 | Kopečky | 3 | skutečné kopce, které míč odklánějí, krtince |
+| 8 | Lesík | 4 | Z-zatáčka, stromy, kláda, bunkr |
+| 9 | Velké finále | 4 | vodní příkop s mostem, urychlovač, trojice bumperů, balíky sena |
+
+Na každou jamku je limit **PAR + 4 úderů** – pokud míč nepadne, jamka se zapíše za PAR + 5 a hra pokračuje.
+
+---
+
+## Odměny
+
+Výchozí nastavení (vše se dá změnit z aplikace):
+
+| Za co | Odměna |
+|---|---|
+| Dohrání všech 9 jamek | +10 ⭐ |
+| Celkový výsledek **pod PAR** (méně než 28 úderů) | +20 ⭐ |
+| Navíc za každý úder pod PAR | +5 ⭐ |
+| Každá jamka na 1 úder (hole-in-one) | +10 ⭐ |
+
+Hra odměny jen **spočítá a zobrazí**. Skutečné připsání dělá aplikace / server po přijetí události
+`game_complete`. Když hra neběží v aplikaci (např. na webu), ukáže hláška „Odměny se připisují jen při hraní
+v aplikaci“.
+
+> ⚠️ **Bezpečnost:** cokoliv běží v prohlížeči, může hráč upravit. Odměnu proto vždy **spočítej znovu na serveru**
+> z hodnot `holes[].strokes` a nevěř poli `rewards`. Doporučené kontroly:
+> - `nonce` – jednorázový token, který server vydá před hrou a přijme jen jednou,
+> - 9 jamek, `par` sedí s tabulkou `[2,3,3,3,3,3,3,4,4]`, `strokes` je celé číslo 1 až PAR+5,
+> - `durationMs` není nesmyslně krátké (např. < 36 s),
+> - denní limit odměn na hráče.
+>
+> Hotová ukázka těchto kontrol je ve funkci `serverValidateAndCredit` v `demo-app.html`.
+
+---
+
+## Napojení na aplikaci
+
+### 1. Nastavení hry
+
+Tři možnosti (lze kombinovat):
+
+**a) URL parametry** – `index.html?app=1&user=123&name=Tomáš&nonce=abc&close=1`
+
+| Parametr | Význam |
+|---|---|
+| `app=1` | hra běží v aplikaci → odměny se odesílají |
+| `user`, `name` | ID a jméno hráče (jméno se zobrazí v menu) |
+| `nonce` | jednorázový token pro tuto hru |
+| `close=1` | zobrazí tlačítko ✕ (pošle událost `close`) |
+| `origin` | origin rodičovské stránky (iframe) – zprávy se pak posílají/přijímají jen od ní |
+
+**b) Zpráva `init`** (doporučeno) – aplikace ji pošle po události `ready`:
+
+```js
+{ type: 'init', config: {
+    playerName: 'Tomáš', userId: '123', nonce: 'jednorazovy-token',
+    appName: 'aplikaci Sportpark',
+    currency: { icon: '⭐', name: 'bodů' },
+    rewards: { completion: 10, underPar: 20, perStrokeUnderPar: 5, holeInOne: 10 },
+    rewardsEnabled: true,
+    rewardNotice: '',            // např. 'Dnešní odměnu už máš – hraj pro radost!'
+    showCloseButton: true,
+    ballImage: 'assets/ball.png' // nebo data:image/png;base64,...
+} }
+```
+
+**c) Globální objekt** před načtením `game.js`: `<script>window.FOTBALGOLF_CONFIG = { ... }</script>`
+
+### 2. Události ze hry → aplikace
+
+Každá zpráva má `source: 'fotbalgolf'`, `version`, `type`, `runId`, `userId`, `nonce`, `ts`.
+
+| `type` | Kdy | Data navíc |
+|---|---|---|
+| `ready` | hra se načetla | `totalPar`, `holes[]`, `rewards` |
+| `game_start` | hráč začal hru | `totalPar`, `holes` |
+| `hole_complete` | dokončená jamka | `hole`, `name`, `par`, `strokes`, `holeInOne`, `pickedUp`, `scoreToPar` |
+| `game_complete` | **konec hry → připsat odměnu** | viz níže |
+| `share` | hráč sdílí výsledek | `method`, `text`, případně `imageDataUrl` (PNG) – když sdílení neumí WebView, nasdílej obrázek nativně |
+| `close` | hráč klikl na ✕ / „Zpět do aplikace“ | `state` |
+
+Ukázka `game_complete`:
+
+```json
+{
+  "source": "fotbalgolf", "type": "game_complete", "version": "2.0.0",
+  "runId": "1fe4…", "userId": "123", "nonce": "jednorazovy-token",
+  "startedAt": 1791358959949, "finishedAt": 1791359079997, "durationMs": 120048,
+  "completed": true, "totalStrokes": 25, "totalPar": 28, "scoreToPar": -3, "underPar": true,
+  "holesInOne": 1,
+  "holes": [ { "hole": 1, "name": "Rozcvička", "par": 2, "strokes": 1, "holeInOne": true, "pickedUp": false }, … ],
+  "rewards": { "currency": { "icon": "⭐", "name": "bodů" }, "total": 55,
+               "items": [ { "id": "completion", "label": "Dohrání všech 9 jamek", "amount": 10 }, … ] },
+  "isPersonalRecord": true
+}
+```
+
+### 3. Odpověď aplikace → hra
+
+Po připsání pošli zpět (hráč uvidí „✅ Připsáno +55 ⭐ · Zůstatek: 120 ⭐“):
+
+```js
+{ type: 'reward_result', ok: true, credited: 55, balance: 120 }
+// nebo při chybě / limitu:
+{ type: 'reward_result', ok: false, message: 'Dnešní odměnu už máš – zítra zas!' }
+```
+
+Pokud odpověď nepřijde do 6 s, hra ukáže „Výsledek byl odeslán do aplikace“.
+Před další hrou pošli nový `nonce` přes `{ type: 'init', config: { nonce: '…' } }`.
+
+### Konkrétní platformy
+
+Hra posílá události všemi kanály najednou, takže stačí poslouchat ten svůj.
+
+**Web (iframe)**
+```html
+<iframe id="game" src="https://tvuj-web.cz/fotbalgolf/index.html?app=1" style="width:100%;height:100vh;border:0"></iframe>
+<script>
+  const game = document.getElementById('game');
+  window.addEventListener('message', (e) => {
+    const m = e.data;
+    if (!m || m.source !== 'fotbalgolf') return;
+    if (m.type === 'ready') game.contentWindow.postMessage({ type: 'init', config: { userId: '123', nonce: '…' } }, '*');
+    if (m.type === 'game_complete') {
+      fetch('/api/fotbalgolf/reward', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(m) })
+        .then((r) => r.json())
+        .then((res) => game.contentWindow.postMessage({ type: 'reward_result', ...res }, '*'));
+    }
+  });
+</script>
+```
+
+**React Native (`react-native-webview`)**
+```jsx
+<WebView
+  ref={webRef}
+  source={{ uri: 'https://tvuj-web.cz/fotbalgolf/index.html?app=1&close=1' }}
+  onMessage={async (e) => {
+    const m = JSON.parse(e.nativeEvent.data);
+    if (m.type === 'ready') webRef.current.injectJavaScript(`window.Fotbalgolf.init(${JSON.stringify({ userId, nonce, playerName })}); true;`);
+    if (m.type === 'game_complete') {
+      const res = await api.post('/fotbalgolf/reward', m);   // server ověří a připíše
+      webRef.current.injectJavaScript(`window.Fotbalgolf.rewardResult(${JSON.stringify(res)}); true;`);
+    }
+    if (m.type === 'close') navigation.goBack();
+  }}
+/>
+```
+
+**Flutter (`webview_flutter`)** – kanál `FotbalgolfNative`:
+```dart
+controller
+  ..addJavaScriptChannel('FotbalgolfNative', onMessageReceived: (msg) async {
+      final m = jsonDecode(msg.message);
+      if (m['type'] == 'game_complete') {
+        final res = await api.reward(m);
+        controller.runJavaScript('window.Fotbalgolf.rewardResult(${jsonEncode(res)})');
+      }
+  })
+  ..loadRequest(Uri.parse('https://tvuj-web.cz/fotbalgolf/index.html?app=1'));
+```
+
+**Android (WebView)** – `webView.addJavascriptInterface(obj, "FotbalgolfNative")`, kde `obj` má metodu
+`@JavascriptInterface fun postMessage(json: String)`. Odpověď: `webView.evaluateJavascript("window.Fotbalgolf.rewardResult({...})", null)`.
+
+**iOS (WKWebView)** – `userContentController.add(self, name: "fotbalgolf")`, zprávy chodí do
+`userContentController(_:didReceive:)`. Odpověď: `webView.evaluateJavaScript("window.Fotbalgolf.rewardResult({...})")`.
+
+### JS API ve hře
+
+| Volání | Co dělá |
+|---|---|
+| `window.Fotbalgolf.init(config)` | stejné jako zpráva `init` |
+| `window.Fotbalgolf.rewardResult({ok, credited, balance, message})` | stejné jako zpráva `reward_result` |
+| `window.Fotbalgolf.start()` | spustí novou hru |
+| `window.Fotbalgolf.getState()` | aktuální stav (jamka, údery, skóre) |
+
+Pro hostitelskou webovou stránku (bez iframe) je k dispozici i událost `window.addEventListener('fotbalgolf', e => e.detail)`.
+
+---
+
+## Úprava jamek
+
+Jamky jsou v poli `HOLES` v `game.js`. Hřiště má rozměr 100 × 160 jednotek, okraj obvykle `8…92 × 8…152`.
+
+```js
+{ name: 'Moje jamka', par: 3,
+  poly: [[8,8],[92,8],[92,152],[8,152]],      // obrys hřiště (mantinely)
+  tee: [50,142], cup: [50,22],                // odpaliště a jamka
+  zones: [ { t:'sand', shape:'rect', x:20, y:60, w:60, h:20, r:8 } ],
+  obs:   [ { t:'tyre', x:30, y:100, r:5 } ] }
+```
+
+- **Zóny** (`zones`): `sand` (brzdí), `water` (trestný úder), `hill` (`x,y,r,k` – kopec), `boost` (`dir:[0,-1]` – urychlovač), `bridge` (jen vzhled).
+  Tvar `shape: 'rect'` (`x,y,w,h,r`) nebo `'ellipse'` (`x,y,rx,ry`).
+- **Překážky** (`obs`): `cone`, `tyre`, `hay`, `rock`, `tree`, `molehill`, `bumper` (`x,y,r`), `log` / `rail` (`a:[x,y], b:[x,y], r`),
+  `spinner` (`x,y,len,arms,r,w`), `slider` (`y,cx,amp,half,r,w,ph`).
+
+Po změně PARu nezapomeň upravit tabulku PARů i na serveru.
