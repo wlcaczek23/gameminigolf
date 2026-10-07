@@ -23,10 +23,10 @@ const cfg = {
   rewardNotice: '',                    // např. „Dnešní odměnu už máš – hraj pro radost!“
   currency: { icon: '⭐', name: 'bodů' },
   rewards: {
-    completion: 10,                    // za dohrání všech 9 jamek
-    underPar: 20,                      // bonus za celkový výsledek pod PAR
-    perStrokeUnderPar: 5,              // + za každý úder pod PAR
-    holeInOne: 10,                     // + za každou jamku na 1 úder
+    completion: 0,                     // za dohrání všech 9 jamek (0 = bez odměny)
+    underPar: 2,                       // za celkový výsledek pod PAR
+    perStrokeUnderPar: 0,              // + za každý úder pod PAR (0 = bez odměny)
+    holeInOne: 1,                      // + za každou jamku na 1 úder
   },
   ballImage: 'assets/ball.png',        // logo na míčku (když chybí, kreslí se fotbalový míč)
   playerName: '',
@@ -1326,7 +1326,9 @@ function showEnd(res, isRecord) {
       ${rewardRowsHtml(R.items)}
       <div class="rtotal"><span>Celkem</span><b>+${R.total} ${esc(cfg.currency.icon)}</b></div>
       <div id="reward-status"></div>
-    </div>` : (cfg.rewardNotice ? `<div class="rnote">${esc(cfg.rewardNotice)}</div>` : '');
+    </div>` : cfg.rewardNotice ? `<div class="rnote">${esc(cfg.rewardNotice)}</div>`
+    : cfg.rewardsEnabled && num(cfg.rewards.underPar) > 0
+      ? `<div class="rnote">Tentokrát bez odměny – zahraj pod PAR (méně než ${res.totalPar} úderů) a získej +${num(cfg.rewards.underPar)} ${esc(cfg.currency.icon)}</div>` : '';
 
   overlay.innerHTML = `
     <div class="panel">

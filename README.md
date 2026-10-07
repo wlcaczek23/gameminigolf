@@ -1,7 +1,7 @@
 # ⚽ Mini Fotbalgolf – Sportpark Pavlišov (v2)
 
 Mobilní mini hra fotbalgolfu (HTML5 canvas, bez závislostí). Hraje se 9 jamek, celkový **PAR 28**.
-Za dohrání hry a za výsledek **pod PAR** hra posílá odměny do tvé aplikace.
+Za výsledek **pod PAR** a za hole-in-one hra posílá odměny do tvé aplikace.
 
 | Soubor | Co to je |
 |---|---|
@@ -50,10 +50,13 @@ Výchozí nastavení (vše se dá změnit z aplikace):
 
 | Za co | Odměna |
 |---|---|
-| Dohrání všech 9 jamek | +10 ⭐ |
-| Celkový výsledek **pod PAR** (méně než 28 úderů) | +20 ⭐ |
-| Navíc za každý úder pod PAR | +5 ⭐ |
-| Každá jamka na 1 úder (hole-in-one) | +10 ⭐ |
+| Dohrání všech 9 jamek | bez odměny (`completion: 0`) |
+| Celkový výsledek **pod PAR** (méně než 28 úderů) | +2 ⭐ |
+| Navíc za každý úder pod PAR | bez odměny (`perStrokeUnderPar: 0`) |
+| Každá jamka na 1 úder (hole-in-one) | +1 ⭐ |
+
+Položky s hodnotou `0` se ve hře vůbec nezobrazují. Když hráč nezíská nic, uvidí na konci výzvu
+„zahraj pod PAR a získej +2 ⭐“.
 
 Hra odměny jen **spočítá a zobrazí**. Skutečné připsání dělá aplikace / server po přijetí události
 `game_complete`. Když hra neběží v aplikaci (např. na webu), ukáže hláška „Odměny se připisují jen při hraní
@@ -93,7 +96,7 @@ Tři možnosti (lze kombinovat):
     playerName: 'Tomáš', userId: '123', nonce: 'jednorazovy-token',
     appName: 'aplikaci Sportpark',
     currency: { icon: '⭐', name: 'bodů' },
-    rewards: { completion: 10, underPar: 20, perStrokeUnderPar: 5, holeInOne: 10 },
+    rewards: { completion: 0, underPar: 2, perStrokeUnderPar: 0, holeInOne: 1 },
     rewardsEnabled: true,
     rewardNotice: '',            // např. 'Dnešní odměnu už máš – hraj pro radost!'
     showCloseButton: true,
@@ -126,18 +129,19 @@ Ukázka `game_complete`:
   "completed": true, "totalStrokes": 25, "totalPar": 28, "scoreToPar": -3, "underPar": true,
   "holesInOne": 1,
   "holes": [ { "hole": 1, "name": "Rozcvička", "par": 2, "strokes": 1, "holeInOne": true, "pickedUp": false }, … ],
-  "rewards": { "currency": { "icon": "⭐", "name": "bodů" }, "total": 55,
-               "items": [ { "id": "completion", "label": "Dohrání všech 9 jamek", "amount": 10 }, … ] },
+  "rewards": { "currency": { "icon": "⭐", "name": "bodů" }, "total": 3,
+               "items": [ { "id": "under_par", "label": "Výsledek pod PAR (25 < 28)", "amount": 2 },
+                          { "id": "hole_in_one", "label": "Hole-in-one (1×)", "amount": 1 } ] },
   "isPersonalRecord": true
 }
 ```
 
 ### 3. Odpověď aplikace → hra
 
-Po připsání pošli zpět (hráč uvidí „✅ Připsáno +55 ⭐ · Zůstatek: 120 ⭐“):
+Po připsání pošli zpět (hráč uvidí „✅ Připsáno +3 ⭐ · Zůstatek: 12 ⭐“):
 
 ```js
-{ type: 'reward_result', ok: true, credited: 55, balance: 120 }
+{ type: 'reward_result', ok: true, credited: 3, balance: 12 }
 // nebo při chybě / limitu:
 { type: 'reward_result', ok: false, message: 'Dnešní odměnu už máš – zítra zas!' }
 ```
