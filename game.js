@@ -358,7 +358,9 @@ window.Fotbalgolf = {
 //  VELIKOST / ZOBRAZENÍ
 // ═══════════════════════════════════════════════════════
 function resize() {
-  $('#game-shell').style.height = window.innerHeight + 'px';
+  const rs = getComputedStyle(document.documentElement);   // hostitel může mít okraje pro výřez telefonu
+  const pad = (parseFloat(rs.paddingTop) || 0) + (parseFloat(rs.paddingBottom) || 0);
+  $('#game-shell').style.height = Math.max(200, window.innerHeight - pad) + 'px';
   const r = wrap.getBoundingClientRect();
   W = Math.max(1, r.width); H = Math.max(1, r.height);
   dpr = Math.min(window.devicePixelRatio || 1, 2.5);
