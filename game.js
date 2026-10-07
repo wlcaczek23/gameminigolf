@@ -88,46 +88,46 @@ function ribbon(fn, n, half) {
 }
 
 const HOLES = [
-  { name: 'Rozcvička', par: 2, poly: RECT, tee: [50, 140], cup: [50, 24],
+  { name: 'Rozcvička', par: 1, poly: RECT, tee: [50, 140], cup: [50, 24],
     obs: [
       { t: 'cone', x: 34, y: 97 }, { t: 'cone', x: 42, y: 92 }, { t: 'cone', x: 50, y: 88 },
       { t: 'cone', x: 58, y: 92 }, { t: 'cone', x: 66, y: 97 },
     ] },
-  { name: 'Pískoviště', par: 3, poly: RECT, tee: [50, 142], cup: [50, 22],
+  { name: 'Pískoviště', par: 1, poly: RECT, tee: [50, 142], cup: [50, 22],
     zones: [{ t: 'sand', shape: 'rect', x: 18, y: 64, w: 64, h: 28, r: 9 }],
     obs: [
       { t: 'tyre', x: 24, y: 116, r: 5.5 }, { t: 'tyre', x: 76, y: 116, r: 5.5 },
       { t: 'hay', x: 50, y: 44, r: 6.5 },
     ] },
-  { name: 'Rybníček', par: 3, poly: RECT, tee: [50, 142], cup: [50, 22],
+  { name: 'Rybníček', par: 1, poly: RECT, tee: [50, 142], cup: [50, 22],
     zones: [{ t: 'water', shape: 'ellipse', x: 50, y: 84, rx: 25, ry: 20 }],
     obs: [{ t: 'rock', x: 21, y: 50, r: 3.4 }, { t: 'rock', x: 79, y: 118, r: 3.4 }] },
-  { name: 'Mlýnek', par: 3,
+  { name: 'Mlýnek', par: 1,
     poly: [[8, 8], [92, 8], [92, 56], [76, 64], [76, 96], [92, 104], [92, 152], [8, 152], [8, 104], [24, 96], [24, 64], [8, 56]],
     tee: [50, 142], cup: [50, 20],
     obs: [{ t: 'spinner', x: 50, y: 80, len: 15, arms: 4, r: 1.4, w: 0.022 }] },
-  { name: 'Zatáčka', par: 3, poly: [[8, 152], [54, 152], [54, 62], [92, 62], [92, 8], [8, 8]],
+  { name: 'Zatáčka', par: 1, poly: [[8, 152], [54, 152], [54, 62], [92, 62], [92, 8], [8, 8]],
     tee: [31, 142], cup: [78, 35],
     zones: [{ t: 'boost', x: 23, y: 92, w: 16, h: 20, dir: [0, -1] }],
     obs: [{ t: 'bumper', x: 21, y: 21, r: 5 }, { t: 'tyre', x: 64, y: 21, r: 5 }, { t: 'tyre', x: 64, y: 49, r: 5 }] },
-  { name: 'Posuvné brány', par: 3, poly: RECT, tee: [50, 142], cup: [50, 22],
+  { name: 'Posuvné brány', par: 1, poly: RECT, tee: [50, 142], cup: [50, 22],
     obs: [
       { t: 'slider', y: 108, cx: 50, amp: 19, half: 12, r: 1.6, w: 0.02, ph: 0 },
       { t: 'slider', y: 60, cx: 50, amp: 19, half: 12, r: 1.6, w: 0.02, ph: Math.PI },
       { t: 'cone', x: 30, y: 84 }, { t: 'cone', x: 50, y: 84 }, { t: 'cone', x: 70, y: 84 },
     ] },
-  { name: 'Kopečky', par: 3, poly: RECT, tee: [50, 142], cup: [50, 20],
+  { name: 'Kopečky', par: 1, poly: RECT, tee: [50, 142], cup: [50, 20],
     zones: [
       { t: 'hill', x: 63, y: 112, r: 17, k: 0.045 },
       { t: 'hill', x: 37, y: 80, r: 17, k: 0.045 },
       { t: 'hill', x: 63, y: 48, r: 17, k: 0.045 },
     ],
     obs: [{ t: 'molehill', x: 21, y: 118, r: 3.2 }, { t: 'molehill', x: 80, y: 78, r: 3.2 }, { t: 'molehill', x: 24, y: 40, r: 3.2 }] },
-  { name: 'Lesík', par: 4, poly: [[52, 152], [92, 152], [92, 60], [48, 60], [48, 8], [8, 8], [8, 104], [52, 104]],
+  { name: 'Lesík', par: 1, poly: [[52, 152], [92, 152], [92, 60], [48, 60], [48, 8], [8, 8], [8, 104], [52, 104]],
     tee: [72, 142], cup: [28, 22],
     zones: [{ t: 'sand', shape: 'ellipse', x: 19, y: 95, rx: 10, ry: 7 }],
     obs: [{ t: 'tree', x: 40, y: 80, r: 6 }, { t: 'tree', x: 74, y: 74, r: 6 }, { t: 'log', a: [8, 44], b: [28, 39], r: 1.8 }] },
-  { name: 'Most přes potok', par: 4, poly: RECT, tee: [50, 144], cup: [50, 20],
+  { name: 'Most přes potok', par: 1, poly: RECT, tee: [50, 144], cup: [50, 20],
     zones: [
       { t: 'water', shape: 'rect', x: 8, y: 98, w: 32, h: 12, r: 1 },
       { t: 'water', shape: 'rect', x: 60, y: 98, w: 32, h: 12, r: 1 },
@@ -140,35 +140,31 @@ const HOLES = [
       { t: 'hay', x: 35, y: 26, r: 6 }, { t: 'hay', x: 65, y: 26, r: 6 },
     ] },
   // ── ZADNÍ DEVÍTKA – těžší: zatáčky, voda, mosty ─────────
-  { name: 'Rozcestník', par: 3,                      // podle náčrtku: L s cedulí, sloupkem a kládami
+  { name: 'Rozcestník', par: 4,                      // podle náčrtku: L s cedulí, sloupkem a kládami
     poly: [[8, 152], [40, 152], [40, 74], ...arc(70, 52, 22, Math.PI / 2, -Math.PI / 2, 14), ...arc(20, 42, 12, -Math.PI / 2, -Math.PI, 6)],
     tee: [24, 140], cup: [83, 52],
-    decor: [{ t: 'arrow', p: [[20, 98], [16, 70], [33, 61]] }],
     obs: [
       { t: 'board', a: [12, 50], b: [30, 38] },
       { t: 'rail', a: [40, 74], b: [40, 57], r: 1.6 },
       { t: 'log', a: [48, 38], b: [60, 35], r: 1.8 }, { t: 'log', a: [64, 39], b: [77, 36], r: 1.8 },
       { t: 'log', a: [50, 54], b: [56, 66], r: 1.8 }, { t: 'log', a: [64, 54], b: [70, 66], r: 1.8 },
     ] },
-  { name: 'Ohrady', par: 3,                          // podle náčrtku: slalom mezi třemi ohradami
+  { name: 'Ohrady', par: 4,                          // podle náčrtku: slalom mezi třemi ohradami
     poly: [[18, 152], [82, 152], ...arc(50, 40, 32, 0, -Math.PI, 18)],
     tee: [50, 142], cup: [50, 22], logo: [32, 134, 22],
-    decor: [{ t: 'arrow', p: [[66, 130], [70, 104], [46, 99]] }, { t: 'arrow', p: [[34, 74], [30, 57], [56, 60]] }],
     obs: [
       { t: 'fence', a: [18, 48], b: [52, 48] },
       { t: 'fence', a: [48, 82], b: [82, 82] },
       { t: 'fence', a: [18, 116], b: [52, 116] },
     ] },
-  { name: 'Sedmička', par: 4,                        // podle náčrtku: zakřivená „sedmička“ s ohradami
-    poly: [[44, 152], [78, 152], [74, 120], [66, 96], [60, 78], [62, 62], ...arc(73, 43, 19, Math.PI / 2, -Math.PI / 2, 14),
-      ...arc(22, 36, 12, -Math.PI / 2, -Math.PI, 6), [10, 44], [16, 72], [30, 100], [40, 124]],
-    tee: [61, 142], cup: [80, 43], logo: false,
-    decor: [{ t: 'arrow', p: [[48, 130], [42, 112], [58, 107]] }, { t: 'arrow', p: [[30, 82], [28, 60], [44, 50]] }],
+  { name: 'Sedmička', par: 4,                        // podle náčrtku: zakřivená „sedmička“, dvě ohrady
+    poly: [[36, 152], [84, 152], [78, 118], [66, 90], [62, 62], ...arc(73, 43, 19, Math.PI / 2, -Math.PI / 2, 14),
+      ...arc(22, 36, 12, -Math.PI / 2, -Math.PI, 6), [10, 44], [14, 70], [26, 100], [34, 126]],
+    tee: [60, 144], cup: [80, 43], logo: false,
     obs: [
-      { t: 'fence', a: [56, 134], b: [77, 134] },
-      { t: 'fence', a: [35, 116], b: [56, 116] },
-      { t: 'fence', a: [44, 98], b: [68, 98] },
-      { t: 'rock', x: 16, y: 52, r: 3.6 }, { t: 'rock', x: 27, y: 45, r: 3.2 }, { t: 'rock', x: 46, y: 56, r: 3 },
+      { t: 'fence', a: [50, 116], b: [77, 116] },
+      { t: 'fence', a: [16, 88], b: [42, 88] },
+      { t: 'rock', x: 16, y: 52, r: 3.6 }, { t: 'rock', x: 27, y: 45, r: 3.2 },
       { t: 'hay', x: 56, y: 39, r: 6 },
     ] },
   { name: 'Dva mosty', par: 4,                       // řeka napříč – bezpečný most vpravo, riskantní zkratka vlevo
@@ -195,8 +191,8 @@ const HOLES = [
       { t: 'water', shape: 'ellipse', x: 16, y: 47, rx: 3.5, ry: 7 },
       { t: 'sand', shape: 'ellipse', x: 56, y: 32, rx: 7, ry: 5 },
     ],
-    obs: [{ t: 'tyre', x: 50, y: 81, r: 3.6 }, { t: 'cone', x: 66, y: 98 }, { t: 'cone', x: 34, y: 64 }] },
-  { name: 'Ostrov', par: 3,                          // jamka na ostrově, přístup jen po mostě za mlýnkem
+    obs: [{ t: 'cone', x: 66, y: 98 }, { t: 'cone', x: 34, y: 64 }] },
+  { name: 'Ostrov', par: 4,                          // jamka na ostrově, přístup jen po mostě za mlýnkem
     poly: RECT, tee: [50, 142], cup: [50, 48], logo: [50, 129, 22],
     zones: [
       { t: 'water', shape: 'rect', x: 8, y: 30, w: 84, h: 56, r: 2 },
@@ -210,7 +206,6 @@ const HOLES = [
   { name: 'Otočka', par: 4,                          // nahoru, otočka kolem přepážky a dolů přes most
     poly: [[8, 8], [92, 8], [92, 152], [54, 152], ...arc(50, 50, 4, 0, -Math.PI, 6), [46, 152], [8, 152]],
     tee: [73, 142], cup: [27, 130], logo: [73, 126, 24],
-    decor: [{ t: 'arrow', p: [[82, 56], [86, 22], [62, 18]] }],
     zones: [
       { t: 'boost', x: 64, y: 100, w: 18, h: 16, dir: [0, -1] },
       { t: 'water', shape: 'rect', x: 8, y: 88, w: 38, h: 12, r: 1 },
@@ -221,10 +216,9 @@ const HOLES = [
       { t: 'bumper', x: 50, y: 24, r: 4.5 }, { t: 'tyre', x: 24, y: 32, r: 5 },
       { t: 'rail', a: [17, 85], b: [17, 103], r: 1 }, { t: 'rail', a: [37, 85], b: [37, 103], r: 1 },
     ] },
-  { name: 'Serpentina', par: 5,                      // tři patra tam a zpátky
+  { name: 'Serpentina', par: 4,                      // tři patra tam a zpátky, cestou jen most a písek
     poly: [[8, 152], [92, 152], [92, 116], [40, 116], [40, 100], [92, 100], [92, 8], [8, 8], [8, 48], [60, 48], [60, 64], [8, 64]],
     tee: [76, 136], cup: [20, 28], logo: false,
-    decor: [{ t: 'arrow', p: [[22, 112], [17, 94], [30, 84]] }, { t: 'arrow', p: [[72, 60], [74, 40], [58, 33]] }],
     zones: [
       { t: 'water', shape: 'rect', x: 34, y: 116, w: 20, h: 36, r: 1 },
       { t: 'bridge', x: 31, y: 124, w: 26, h: 20, dir: 'h' },
@@ -232,31 +226,25 @@ const HOLES = [
     ],
     obs: [
       { t: 'rail', a: [31, 124], b: [57, 124], r: 1 }, { t: 'rail', a: [31, 144], b: [57, 144], r: 1 },
-      { t: 'log', a: [26, 70], b: [34, 88], r: 1.8 }, { t: 'log', a: [48, 78], b: [55, 95], r: 1.8 },
-      { t: 'tyre', x: 40, y: 16, r: 4 }, { t: 'tyre', x: 40, y: 42, r: 4 }, { t: 'cone', x: 78, y: 24 },
+      { t: 'tyre', x: 40, y: 16, r: 4 }, { t: 'tyre', x: 40, y: 42, r: 4 },
     ] },
-  { name: 'Velké finále', par: 5,                    // tři potoky, tři mosty, každý jinde
+  { name: 'Velké finále', par: 4,                    // dva potoky, mosty na opačných stranách
     poly: RECT, tee: [50, 143], cup: [50, 20], logo: [24, 141, 20],
     zones: [
       { t: 'water', shape: 'rect', x: 8, y: 122, w: 84, h: 8, r: 1 },
-      { t: 'water', shape: 'rect', x: 8, y: 84, w: 84, h: 8, r: 1 },
       { t: 'water', shape: 'rect', x: 8, y: 44, w: 84, h: 8, r: 1 },
       { t: 'bridge', x: 64, y: 119, w: 20, h: 14 },
-      { t: 'bridge', x: 16, y: 81, w: 20, h: 14 },
       { t: 'bridge', x: 40, y: 41, w: 20, h: 14 },
       { t: 'sand', shape: 'rect', x: 40, y: 100, w: 20, h: 16, r: 5 },
     ],
     obs: [
       { t: 'rail', a: [64, 119], b: [64, 133], r: 1 }, { t: 'rail', a: [84, 119], b: [84, 133], r: 1 },
-      { t: 'rail', a: [16, 81], b: [16, 95], r: 1 }, { t: 'rail', a: [36, 81], b: [36, 95], r: 1 },
       { t: 'rail', a: [40, 41], b: [40, 55], r: 1 }, { t: 'rail', a: [60, 41], b: [60, 55], r: 1 },
-      { t: 'slider', y: 68, cx: 50, amp: 18, half: 10, r: 1.6, w: 0.022, ph: 0 },
-      { t: 'cone', x: 82, y: 104 }, { t: 'cone', x: 18, y: 112 },
       { t: 'hay', x: 35, y: 22, r: 5.5 }, { t: 'hay', x: 65, y: 22, r: 5.5 },
     ] },
 ];
 const TOTAL_PAR = HOLES.reduce((a, h) => a + h.par, 0);
-const strokeLimit = (h) => h.par + 4;       // po vyčerpání se jamka zapíše za limit + 1
+const strokeLimit = (h) => Math.max(h.par + 4, 6);   // po vyčerpání se jamka zapíše za limit + 1
 
 // ═══════════════════════════════════════════════════════
 //  FYZIKA – konstanty (jednotky / snímek při 60 FPS)
@@ -976,7 +964,6 @@ function buildStatic() {
     c.restore();
   }
   for (const z of hole.zones) drawZoneStatic(c, z, rng);
-  for (const d of hole.decor || []) if (d.t === 'arrow') drawArrow(c, d.p);
   drawTee(c);
   for (const o of hole.obs) {
     if (o.t === 'slider') {
@@ -1259,20 +1246,6 @@ function drawBoard(c, o) {                         // cedule ze tří prken
     c.beginPath(); c.moveTo(-r + 1, y + h * 0.45); c.quadraticCurveTo(len / 2, y + h * 0.2, len + r - 1, y + h * 0.55); c.stroke();
     c.fillStyle = '#3b2a1a'; circle(c, -r + 0.9, y + h / 2, 0.22); c.fill(); circle(c, len + r - 0.9, y + h / 2, 0.22); c.fill();
   });
-  c.restore();
-}
-function drawArrow(c, [[x0, y0], [cx, cy], [x1, y1]]) {   // červená šipka namalovaná na trávě
-  c.save();
-  c.lineCap = 'round';
-  c.shadowColor = 'rgba(255,40,30,0.55)'; c.shadowBlur = 5 * dpr;
-  const g = c.createLinearGradient(x0, y0, x1, y1);
-  g.addColorStop(0, 'rgba(200,20,20,0)'); g.addColorStop(0.35, 'rgba(214,32,24,0.85)'); g.addColorStop(1, '#e8261c');
-  c.strokeStyle = g; c.lineWidth = 2.1;
-  c.beginPath(); c.moveTo(x0, y0); c.quadraticCurveTo(cx, cy, x1, y1); c.stroke();
-  let dx = x1 - cx, dy = y1 - cy;
-  const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
-  c.fillStyle = '#e8261c';
-  c.beginPath(); c.moveTo(x1 + dx * 3.4, y1 + dy * 3.4); c.lineTo(x1 - dy * 2.5, y1 + dx * 2.5); c.lineTo(x1 + dy * 2.5, y1 - dx * 2.5); c.closePath(); c.fill();
   c.restore();
 }
 function drawBumper(c, o) {

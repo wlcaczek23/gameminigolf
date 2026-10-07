@@ -1,6 +1,6 @@
 # ⚽ Výsledkomat · Mini Fotbalgolf
 
-Mobilní mini hra fotbalgolfu (HTML5 canvas, bez závislostí). Hraje se 18 jamek, celkový **PAR 63**.
+Mobilní mini hra fotbalgolfu (HTML5 canvas, bez závislostí). Hraje se 18 jamek, celkový **PAR 45** (přední devítka PAR 1 na jamku, zadní PAR 4).
 Hra je v barvách a s logem aplikace **Výsledkomat**. Za výsledek **pod PAR** a za hole-in-one hráči získávají
 **mince**, které hra posílá do aplikace.
 
@@ -32,34 +32,33 @@ Spuštění lokálně: `python3 -m http.server` a otevřít `http://localhost:80
 
 | # | Jamka | PAR | Překážky |
 |---|---|---|---|
-| 1 | Rozcvička | 2 | stěna z tréninkových kuželů |
-| 2 | Pískoviště | 3 | bunkr s pískem (brzdí), pneumatiky (odráží), balík sena |
-| 3 | Rybníček | 3 | rybník – **voda = +1 trestný úder** a návrat na místo úderu |
-| 4 | Mlýnek | 3 | otáčivý mlýnek v zúžené pasáži |
-| 5 | Zatáčka | 3 | L-zatáčka, urychlovací pás, odrazový bumper, pneumatiky před jamkou |
-| 6 | Posuvné brány | 3 | dvě pohyblivé závory + kužely |
-| 7 | Kopečky | 3 | skutečné kopce, které míč odklánějí, krtince |
-| 8 | Lesík | 4 | Z-zatáčka, stromy, kláda, bunkr |
-| 9 | Most přes potok | 4 | vodní příkop s mostem, urychlovač, trojice bumperů, balíky sena |
+| 1 | Rozcvička | 1 | stěna z tréninkových kuželů |
+| 2 | Pískoviště | 1 | bunkr s pískem (brzdí), pneumatiky (odráží), balík sena |
+| 3 | Rybníček | 1 | rybník – **voda = +1 trestný úder** a návrat na místo úderu |
+| 4 | Mlýnek | 1 | otáčivý mlýnek v zúžené pasáži |
+| 5 | Zatáčka | 1 | L-zatáčka, urychlovací pás, odrazový bumper, pneumatiky před jamkou |
+| 6 | Posuvné brány | 1 | dvě pohyblivé závory + kužely |
+| 7 | Kopečky | 1 | skutečné kopce, které míč odklánějí, krtince |
+| 8 | Lesík | 1 | Z-zatáčka, stromy, kláda, bunkr |
+| 9 | Most přes potok | 1 | vodní příkop s mostem, urychlovač, trojice bumperů, balíky sena |
 
 **Zadní devítka (těžší – víc zatáček, voda a mosty)**
 
 | # | Jamka | PAR | Překážky |
 |---|---|---|---|
-| 10 | Rozcestník | 3 | L-zatáčka podle náčrtku: cedule v rohu, sloupek, čtyři klády před jamkou |
-| 11 | Ohrady | 3 | podle náčrtku: slalom mezi třemi dřevěnými ohradami |
-| 12 | Sedmička | 4 | podle náčrtku: zakřivená dráha, žebřík z ohrad, kameny a balík sena |
+| 10 | Rozcestník | 4 | L-zatáčka podle náčrtku: cedule v rohu, sloupek, čtyři klády před jamkou |
+| 11 | Ohrady | 4 | podle náčrtku: slalom mezi třemi dřevěnými ohradami |
+| 12 | Sedmička | 4 | podle náčrtku: zakřivená dráha, dvě ohrady, kameny a balík sena |
 | 13 | Dva mosty | 4 | šikmá řeka – bezpečný most vpravo, riskantní úzká zkratka vlevo |
-| 14 | Hadí stezka | 4 | esíčko, tůňky ve vnějších obloucích, bunkr u jamky |
-| 15 | Ostrov | 3 | jamka na ostrově, přístup jen po mostě, před ním mlýnek |
+| 14 | Hadí stezka | 4 | esíčko, tůňky ve vnějších obloucích, bunkr u jamky (nejtěžší jamka) |
+| 15 | Ostrov | 4 | jamka na ostrově, přístup jen po mostě, před ním mlýnek |
 | 16 | Otočka | 4 | nahoru přes posuvnou závoru, otočka kolem přepážky, dolů přes most |
-| 17 | Serpentina | 5 | tři patra tam a zpátky, most přes tůň, bunkr v zatáčce, branka z pneumatik |
-| 18 | Velké finále | 5 | tři potoky a tři mosty, každý na jiné straně, posuvná závora |
+| 17 | Serpentina | 4 | tři patra tam a zpátky, most přes tůň, bunkr v zatáčce, branka z pneumatik |
+| 18 | Velké finále | 4 | dva potoky, mosty na opačných stranách, bunkr mezi nimi |
 
-Červené šipky na trávníku ukazují doporučenou cestu (jako na skutečném hřišti).
 Okno pro hole-in-one z odpaliště je na zadní devítce pod 1 % všech kombinací směru a síly.
 
-Na každou jamku je limit **PAR + 4 úderů** – pokud míč nepadne, jamka se zapíše za PAR + 5 a hra pokračuje.
+Na každou jamku je limit **PAR + 4 úderů, nejméně však 6** – pokud míč nepadne, jamka se zapíše o úder víc a hra pokračuje.
 
 ---
 
@@ -70,7 +69,7 @@ Výchozí nastavení (vše se dá změnit z aplikace):
 | Za co | Odměna |
 |---|---|
 | Dohrání všech 18 jamek | bez odměny (`completion: 0`) |
-| Celkový výsledek **pod PAR** (méně než 63 úderů) | +2 mince |
+| Celkový výsledek **pod PAR** (méně než 45 úderů) | +2 mince |
 | Navíc za každý úder pod PAR | bez odměny (`perStrokeUnderPar: 0`) |
 | Každá jamka na 1 úder (hole-in-one) | +1 mince |
 
@@ -84,7 +83,7 @@ v aplikaci“.
 > ⚠️ **Bezpečnost:** cokoliv běží v prohlížeči, může hráč upravit. Odměnu proto vždy **spočítej znovu na serveru**
 > z hodnot `holes[].strokes` a nevěř poli `rewards`. Doporučené kontroly:
 > - `nonce` – jednorázový token, který server vydá před hrou a přijme jen jednou,
-> - 18 jamek, `par` sedí s tabulkou `[2,3,3,3,3,3,3,4,4, 3,3,4,4,4,3,4,5,5]`, `strokes` je celé číslo 1 až PAR+5,
+> - 18 jamek, `par` sedí s tabulkou `[1,1,1,1,1,1,1,1,1, 4,4,4,4,4,4,4,4,4]`, `strokes` je celé číslo 1 až max(PAR+5, 7),
 > - `durationMs` není nesmyslně krátké (např. < 72 s),
 > - denní limit odměn na hráče.
 >
@@ -148,11 +147,11 @@ Ukázka `game_complete`:
   "source": "fotbalgolf", "type": "game_complete", "version": "2.0.0",
   "runId": "1fe4…", "userId": "123", "nonce": "jednorazovy-token",
   "startedAt": 1791358959949, "finishedAt": 1791359079997, "durationMs": 120048,
-  "completed": true, "totalStrokes": 60, "totalPar": 63, "scoreToPar": -3, "underPar": true,
+  "completed": true, "totalStrokes": 42, "totalPar": 45, "scoreToPar": -3, "underPar": true,
   "holesInOne": 1,
   "holes": [ { "hole": 1, "name": "Rozcvička", "par": 2, "strokes": 1, "holeInOne": true, "pickedUp": false }, … ],
   "rewards": { "currency": { "name": "mincí", "image": "assets/coin.png" }, "total": 3,
-               "items": [ { "id": "under_par", "label": "Výsledek pod PAR (60 < 63)", "amount": 2 },
+               "items": [ { "id": "under_par", "label": "Výsledek pod PAR (42 < 45)", "amount": 2 },
                           { "id": "hole_in_one", "label": "Hole-in-one (1×)", "amount": 1 } ] },
   "isPersonalRecord": true
 }
@@ -260,7 +259,6 @@ Jamky jsou v poli `HOLES` v `game.js`. Hřiště má rozměr 100 × 160 jednotek
 - **Překážky** (`obs`): `cone`, `tyre`, `hay`, `rock`, `tree`, `molehill`, `bumper` (`x,y,r`), `log` / `rail` / `fence` (ohrada) / `board` (cedule) (`a:[x,y], b:[x,y], r`),
   `spinner` (`x,y,len,arms,r,w`), `slider` (`y,cx,amp,half,r,w,ph`).
 
-- **Dekorace** (`decor`): `{ t:'arrow', p:[[x0,y0],[ovládací bod],[x1,y1]] }` – červená šipka na trávníku.
 - **Tvar hřiště**: pomocné funkce `arc(cx,cy,r,úhel0,úhel1,n)` pro oblouky a `ribbon(fn,n,poloviční šířka)` pro zakřivené dráhy.
 - `logo: [x,y,šířka]` umístí logo na trávník, `logo: false` ho vypne.
 

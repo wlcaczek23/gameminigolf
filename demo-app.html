@@ -33,7 +33,7 @@
 
 <script>
 // ── Nastavení, které by v reálu přišlo z tvého backendu ─────────
-const PAR_TABLE = [2, 3, 3, 3, 3, 3, 3, 4, 4, 3, 3, 4, 4, 4, 3, 4, 5, 5];   // musí odpovídat HOLES v game.js
+const PAR_TABLE = [1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4];   // musí odpovídat HOLES v game.js
 const REWARDS = { completion: 0, underPar: 2, perStrokeUnderPar: 0, holeInOne: 1 };
 
 const frame = document.getElementById('game');
@@ -54,7 +54,7 @@ function serverValidateAndCredit(r) {
   if (!Array.isArray(r.holes) || r.holes.length !== PAR_TABLE.length) return { ok: false, message: 'Neplatný výsledek.' };
   for (let i = 0; i < PAR_TABLE.length; i++) {
     const h = r.holes[i];
-    if (h.par !== PAR_TABLE[i] || !Number.isInteger(h.strokes) || h.strokes < 1 || h.strokes > PAR_TABLE[i] + 5) return { ok: false, message: 'Neplatný výsledek.' };
+    if (h.par !== PAR_TABLE[i] || !Number.isInteger(h.strokes) || h.strokes < 1 || h.strokes > Math.max(PAR_TABLE[i] + 5, 7)) return { ok: false, message: 'Neplatný výsledek.' };
   }
   if (r.durationMs < PAR_TABLE.length * 4000) return { ok: false, message: 'Hra byla příliš rychlá.' };
   usedNonces.add(r.nonce);
