@@ -97,49 +97,49 @@ function ribbon(fn, n, half) {
 }
 
 const HOLES = [
-  { name: 'Rozcvička', par: 1, poly: RECT, tee: [50, 140], cup: [50, 24],
-    obs: [
-      { t: 'cone', x: 34, y: 97 }, { t: 'cone', x: 42, y: 92 }, { t: 'cone', x: 50, y: 88 },
-      { t: 'cone', x: 58, y: 92 }, { t: 'cone', x: 66, y: 97 },
+  { name: 'Kopec', par: 2, poly: RECT, tee: [50, 132], cup: [50, 52], capture: 1.1, logo: [50, 145, 22],
+    zones: [                                         // jamka za hřebenem kopce, za ní voda:
+      { t: 'hill', x: 50, y: 86, rx: 52, ry: 17, k: 0.15 },     // slabá rána sjede zpět,
+      { t: 'water', shape: 'rect', x: 8, y: 8, w: 84, h: 26, r: 1 },  // silná skončí ve vodě
     ] },
-  { name: 'Pískoviště', par: 1, poly: RECT, tee: [50, 142], cup: [50, 22],
+  { name: 'Pískoviště', par: 2, poly: RECT, tee: [50, 142], cup: [50, 22],
     zones: [{ t: 'sand', shape: 'rect', x: 18, y: 64, w: 64, h: 28, r: 9 }],
     obs: [
       { t: 'tyre', x: 24, y: 116, r: 5.5 }, { t: 'tyre', x: 76, y: 116, r: 5.5 },
       { t: 'hay', x: 50, y: 44, r: 6.5 },
     ] },
-  { name: 'Rybníček', par: 1, poly: RECT, tee: [50, 142], cup: [50, 22],
+  { name: 'Rybníček', par: 2, poly: RECT, tee: [50, 142], cup: [50, 22],
     zones: [                                         // dvě jezírka křížem – rovně to nejde
       { t: 'water', shape: 'poly', pts: oval(50, 82, 31, 6.5, 0.6) },
       { t: 'water', shape: 'poly', pts: oval(50, 82, 31, 6.5, -0.6) },
     ],
     obs: [{ t: 'rock', x: 21, y: 50, r: 3.4 }, { t: 'rock', x: 79, y: 118, r: 3.4 }] },
-  { name: 'Mlýnek', par: 1,
+  { name: 'Mlýnek', par: 2,
     poly: [[8, 8], [92, 8], [92, 56], [76, 64], [76, 96], [92, 104], [92, 152], [8, 152], [8, 104], [24, 96], [24, 64], [8, 56]],
     tee: [50, 142], cup: [50, 20],
     obs: [{ t: 'spinner', x: 50, y: 80, len: 23, arms: 4, r: 1.4, w: 0.02 }] },   // ramena až ke krajům – nutno časovat
-  { name: 'Zatáčka', par: 1, poly: [[8, 152], [54, 152], [54, 62], [92, 62], [92, 8], [8, 8]],
+  { name: 'Zatáčka', par: 2, poly: [[8, 152], [54, 152], [54, 62], [92, 62], [92, 8], [8, 8]],
     tee: [31, 142], cup: [78, 35],
     zones: [{ t: 'boost', x: 23, y: 92, w: 16, h: 20, dir: [0, -1] }],
     obs: [{ t: 'bumper', x: 21, y: 21, r: 5 }, { t: 'tyre', x: 64, y: 21, r: 5 }, { t: 'tyre', x: 64, y: 49, r: 5 }] },
-  { name: 'Posuvné brány', par: 1, poly: RECT, tee: [50, 142], cup: [50, 22],
+  { name: 'Posuvné brány', par: 2, poly: RECT, tee: [50, 142], cup: [50, 22],
     obs: [
       { t: 'slider', y: 108, cx: 50, amp: 19, half: 12, r: 1.6, w: 0.02, ph: 0 },
       { t: 'slider', y: 60, cx: 50, amp: 19, half: 12, r: 1.6, w: 0.02, ph: Math.PI },
       { t: 'cone', x: 30, y: 84 }, { t: 'cone', x: 50, y: 84 }, { t: 'cone', x: 70, y: 84 },
     ] },
-  { name: 'Kopečky', par: 1, poly: RECT, tee: [50, 142], cup: [50, 20],
+  { name: 'Kopečky', par: 2, poly: RECT, tee: [50, 142], cup: [50, 20],
     zones: [
       { t: 'hill', x: 36, y: 114, rx: 42, ry: 16, k: 0.09 },  // široké kopce přes celou šířku
       { t: 'hill', x: 64, y: 80, rx: 42, ry: 16, k: 0.09 },
       { t: 'hill', x: 36, y: 46, rx: 42, ry: 16, k: 0.09 },
     ],
     obs: [{ t: 'molehill', x: 80, y: 114, r: 3.2 }, { t: 'molehill', x: 20, y: 80, r: 3.2 }, { t: 'molehill', x: 80, y: 46, r: 3.2 }] },
-  { name: 'Lesík', par: 1, poly: [[52, 152], [92, 152], [92, 60], [48, 60], [48, 8], [8, 8], [8, 104], [52, 104]],
+  { name: 'Lesík', par: 2, poly: [[52, 152], [92, 152], [92, 60], [48, 60], [48, 8], [8, 8], [8, 104], [52, 104]],
     tee: [72, 142], cup: [28, 22],
     zones: [{ t: 'sand', shape: 'ellipse', x: 19, y: 95, rx: 10, ry: 7 }],
     obs: [{ t: 'tree', x: 40, y: 80, r: 6 }, { t: 'tree', x: 74, y: 74, r: 6 }, { t: 'log', a: [8, 44], b: [28, 39], r: 1.8 }] },
-  { name: 'Most přes potok', par: 1, poly: RECT, tee: [50, 144], cup: [50, 20],
+  { name: 'Most přes potok', par: 2, poly: RECT, tee: [50, 144], cup: [50, 20],
     zones: [
       { t: 'water', shape: 'rect', x: 8, y: 98, w: 32, h: 12, r: 1 },
       { t: 'water', shape: 'rect', x: 60, y: 98, w: 32, h: 12, r: 1 },
@@ -828,7 +828,7 @@ function physics() {
   {
     const dx = cup.x - ball.x, dy = cup.y - ball.y, d = Math.hypot(dx, dy);
     if (d < CUP_R) {
-      if (sp < 2.6 + (1 - d / CUP_R) * 1.2) { onHoled(); return; }
+      if (sp < (hole.capture ?? 2.6) + (1 - d / CUP_R) * 1.2) { onHoled(); return; }   // rychlý míč jamku přeskočí
       ball.vx = ball.vx * 0.94 + (dx / (d || 1)) * 0.18; ball.vy = ball.vy * 0.94 + (dy / (d || 1)) * 0.18;
     }
   }
@@ -1058,17 +1058,18 @@ function drawZoneStatic(c, z, rng) {
     }
   } else if (z.t === 'hill') {
     const rx = z.rx ?? z.r, ry = z.ry ?? z.r;
+    const v = Math.min(2.4, Math.max(1, (z.k || 0.05) / 0.05));   // strmější kopec = výraznější
     c.save();
     c.translate(z.x, z.y); c.scale(rx, ry);            // kreslíme v jednotkovém kruhu
     const g = c.createRadialGradient(-0.25, -0.3, 0.05, 0, 0, 1);
-    g.addColorStop(0, 'rgba(255,255,210,0.34)'); g.addColorStop(0.55, 'rgba(255,255,255,0.09)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    g.addColorStop(0, `rgba(255,255,210,${0.34 * v})`); g.addColorStop(0.55, `rgba(255,255,255,${0.09 * v})`); g.addColorStop(1, 'rgba(0,0,0,0)');
     c.fillStyle = g; circle(c, 0, 0, 1); c.fill();
     const g2 = c.createRadialGradient(0.35, 0.4, 0, 0.2, 0.25, 0.9);
-    g2.addColorStop(0, 'rgba(0,40,0,0.18)'); g2.addColorStop(1, 'rgba(0,40,0,0)');
+    g2.addColorStop(0, `rgba(0,40,0,${0.18 * v})`); g2.addColorStop(1, 'rgba(0,40,0,0)');
     c.fillStyle = g2; circle(c, 0, 0, 1); c.fill();
     c.lineWidth = 0.35 / Math.min(rx, ry);
     for (const k of [0.3, 0.6, 0.9]) {
-      c.strokeStyle = `rgba(255,255,255,${0.17 - k * 0.09})`;
+      c.strokeStyle = `rgba(255,255,255,${(0.17 - k * 0.09) * v})`;
       circle(c, 0, 0, k); c.stroke();
     }
     c.restore();

@@ -1,6 +1,6 @@
 # ⚽ Výsledkomat · Mini Fotbalgolf
 
-Mobilní mini hra fotbalgolfu (HTML5 canvas, bez závislostí). Hraje se 18 jamek, celkový **PAR 45** (přední devítka PAR 1 na jamku, zadní PAR 4).
+Mobilní mini hra fotbalgolfu (HTML5 canvas, bez závislostí). Hraje se 18 jamek, celkový **PAR 54** (přední devítka PAR 2 na jamku, zadní PAR 4).
 Hra je v barvách a s logem aplikace **Výsledkomat**. Za výsledek **pod PAR** a za hole-in-one hráči získávají
 **mince**, které hra posílá do aplikace.
 
@@ -32,15 +32,15 @@ Spuštění lokálně: `python3 -m http.server` a otevřít `http://localhost:80
 
 | # | Jamka | PAR | Překážky |
 |---|---|---|---|
-| 1 | Rozcvička | 1 | stěna z tréninkových kuželů |
-| 2 | Pískoviště | 1 | bunkr s pískem (brzdí), pneumatiky (odráží), balík sena |
-| 3 | Rybníček | 1 | dvě jezírka křížem – **voda = +1 trestný úder** a návrat na místo úderu |
-| 4 | Mlýnek | 1 | otáčivý mlýnek, ramena až ke krajům zúžené pasáže – nutno časovat |
-| 5 | Zatáčka | 1 | L-zatáčka, urychlovací pás, odrazový bumper, pneumatiky před jamkou |
-| 6 | Posuvné brány | 1 | dvě pohyblivé závory + kužely |
-| 7 | Kopečky | 1 | tři široké kopce přes celou šířku, které míč odklánějí, krtince |
-| 8 | Lesík | 1 | Z-zatáčka, stromy, kláda, bunkr |
-| 9 | Most přes potok | 1 | vodní příkop s mostem, urychlovač, trojice bumperů, balíky sena |
+| 1 | Kopec | 2 | jamka za strmým kopcem, za ní voda – slabá rána sjede zpátky, silná skončí ve vodě, rozhoduje síla |
+| 2 | Pískoviště | 2 | bunkr s pískem (brzdí), pneumatiky (odráží), balík sena |
+| 3 | Rybníček | 2 | dvě jezírka křížem – **voda = +1 trestný úder** a návrat na místo úderu |
+| 4 | Mlýnek | 2 | otáčivý mlýnek, ramena až ke krajům zúžené pasáže – nutno časovat |
+| 5 | Zatáčka | 2 | L-zatáčka, urychlovací pás, odrazový bumper, pneumatiky před jamkou |
+| 6 | Posuvné brány | 2 | dvě pohyblivé závory + kužely |
+| 7 | Kopečky | 2 | tři široké kopce přes celou šířku, které míč odklánějí, krtince |
+| 8 | Lesík | 2 | Z-zatáčka, stromy, kláda, bunkr |
+| 9 | Most přes potok | 2 | vodní příkop s mostem, urychlovač, trojice bumperů, balíky sena |
 
 **Zadní devítka (těžší – víc zatáček, voda a mosty)**
 
@@ -69,7 +69,7 @@ Výchozí nastavení (vše se dá změnit z aplikace):
 | Za co | Odměna |
 |---|---|
 | Dohrání všech 18 jamek | bez odměny (`completion: 0`) |
-| Celkový výsledek **pod PAR** (méně než 45 úderů) | +2 mince |
+| Celkový výsledek **pod PAR** (méně než 54 úderů) | +2 mince |
 | Navíc za každý úder pod PAR | bez odměny (`perStrokeUnderPar: 0`) |
 | Každá jamka na 1 úder (hole-in-one) | +1 mince |
 
@@ -83,7 +83,7 @@ v aplikaci“.
 > ⚠️ **Bezpečnost:** cokoliv běží v prohlížeči, může hráč upravit. Odměnu proto vždy **spočítej znovu na serveru**
 > z hodnot `holes[].strokes` a nevěř poli `rewards`. Doporučené kontroly:
 > - `nonce` – jednorázový token, který server vydá před hrou a přijme jen jednou,
-> - 18 jamek, `par` sedí s tabulkou `[1,1,1,1,1,1,1,1,1, 4,4,4,4,4,4,4,4,4]`, `strokes` je celé číslo 1 až max(PAR+5, 7),
+> - 18 jamek, `par` sedí s tabulkou `[2,2,2,2,2,2,2,2,2, 4,4,4,4,4,4,4,4,4]`, `strokes` je celé číslo 1 až max(PAR+5, 7),
 > - `durationMs` není nesmyslně krátké (např. < 72 s),
 > - denní limit odměn na hráče.
 >
@@ -147,11 +147,11 @@ Ukázka `game_complete`:
   "source": "fotbalgolf", "type": "game_complete", "version": "2.0.0",
   "runId": "1fe4…", "userId": "123", "nonce": "jednorazovy-token",
   "startedAt": 1791358959949, "finishedAt": 1791359079997, "durationMs": 120048,
-  "completed": true, "totalStrokes": 42, "totalPar": 45, "scoreToPar": -3, "underPar": true,
+  "completed": true, "totalStrokes": 51, "totalPar": 54, "scoreToPar": -3, "underPar": true,
   "holesInOne": 1,
   "holes": [ { "hole": 1, "name": "Rozcvička", "par": 2, "strokes": 1, "holeInOne": true, "pickedUp": false }, … ],
   "rewards": { "currency": { "name": "mincí", "image": "assets/coin.png" }, "total": 3,
-               "items": [ { "id": "under_par", "label": "Výsledek pod PAR (42 < 45)", "amount": 2 },
+               "items": [ { "id": "under_par", "label": "Výsledek pod PAR (51 < 54)", "amount": 2 },
                           { "id": "hole_in_one", "label": "Hole-in-one (1×)", "amount": 1 } ] },
   "isPersonalRecord": true
 }
