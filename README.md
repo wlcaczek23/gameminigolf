@@ -34,11 +34,11 @@ Spuštění lokálně: `python3 -m http.server` a otevřít `http://localhost:80
 |---|---|---|---|
 | 1 | Rozcvička | 1 | stěna z tréninkových kuželů |
 | 2 | Pískoviště | 1 | bunkr s pískem (brzdí), pneumatiky (odráží), balík sena |
-| 3 | Rybníček | 1 | rybník – **voda = +1 trestný úder** a návrat na místo úderu |
-| 4 | Mlýnek | 1 | otáčivý mlýnek v zúžené pasáži |
+| 3 | Rybníček | 1 | dvě jezírka křížem – **voda = +1 trestný úder** a návrat na místo úderu |
+| 4 | Mlýnek | 1 | otáčivý mlýnek, ramena až ke krajům zúžené pasáže – nutno časovat |
 | 5 | Zatáčka | 1 | L-zatáčka, urychlovací pás, odrazový bumper, pneumatiky před jamkou |
 | 6 | Posuvné brány | 1 | dvě pohyblivé závory + kužely |
-| 7 | Kopečky | 1 | skutečné kopce, které míč odklánějí, krtince |
+| 7 | Kopečky | 1 | tři široké kopce přes celou šířku, které míč odklánějí, krtince |
 | 8 | Lesík | 1 | Z-zatáčka, stromy, kláda, bunkr |
 | 9 | Most přes potok | 1 | vodní příkop s mostem, urychlovač, trojice bumperů, balíky sena |
 
@@ -253,13 +253,13 @@ Jamky jsou v poli `HOLES` v `game.js`. Hřiště má rozměr 100 × 160 jednotek
   obs:   [ { t:'tyre', x:30, y:100, r:5 } ] }
 ```
 
-- **Zóny** (`zones`): `sand` (brzdí), `water` (trestný úder), `hill` (`x,y,r,k` – kopec), `boost` (`dir:[0,-1]` – urychlovač),
+- **Zóny** (`zones`): `sand` (brzdí), `water` (trestný úder), `hill` (`x,y,r,k` nebo protáhlý `x,y,rx,ry,k` – kopec), `boost` (`dir:[0,-1]` – urychlovač),
   `bridge` (most – na něm míč do vody nespadne, `dir:'h'` = vodorovný), `island` (ostrov uprostřed vody).
   Tvar `shape: 'rect'` (`x,y,w,h,r`), `'ellipse'` (`x,y,rx,ry`) nebo `'poly'` (`pts:[[x,y],…]`, např. šikmá řeka).
 - **Překážky** (`obs`): `cone`, `tyre`, `hay`, `rock`, `tree`, `molehill`, `bumper` (`x,y,r`), `log` / `rail` / `fence` (ohrada) / `board` (cedule) (`a:[x,y], b:[x,y], r`),
   `spinner` (`x,y,len,arms,r,w`), `slider` (`y,cx,amp,half,r,w,ph`).
 
-- **Tvar hřiště**: pomocné funkce `arc(cx,cy,r,úhel0,úhel1,n)` pro oblouky a `ribbon(fn,n,poloviční šířka)` pro zakřivené dráhy.
+- **Tvar hřiště**: pomocné funkce `arc(cx,cy,r,úhel0,úhel1,n)` pro oblouky, `ribbon(fn,n,poloviční šířka)` pro zakřivené dráhy a `oval(cx,cy,rx,ry,natočení)` pro šikmá jezírka.
 - `logo: [x,y,šířka]` umístí logo na trávník, `logo: false` ho vypne.
 
 Po změně PARu nezapomeň upravit tabulku PARů i na serveru.

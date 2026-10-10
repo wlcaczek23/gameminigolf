@@ -75,6 +75,15 @@ function arc(cx, cy, r, a0, a1, n) {
   for (let i = 0; i <= n; i++) { const a = a0 + ((a1 - a0) * i) / n; pts.push([r2(cx + Math.cos(a) * r), r2(cy + Math.sin(a) * r)]); }
   return pts;
 }
+// otočená elipsa jako polygon (šikmé jezírko); rot v radiánech
+function oval(cx, cy, rx, ry, rot, n = 32) {
+  const pts = [], cr = Math.cos(rot), sr = Math.sin(rot);
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * TAU, x = Math.cos(a) * rx, y = Math.sin(a) * ry;
+    pts.push([r2(cx + x * cr - y * sr), r2(cy + x * sr + y * cr)]);
+  }
+  return pts;
+}
 const smooth = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); };
 // zakřivená dráha: střední čára fn(t), t ∈ 0…1, s poloviční šířkou half
 function ribbon(fn, n, half) {
@@ -100,12 +109,15 @@ const HOLES = [
       { t: 'hay', x: 50, y: 44, r: 6.5 },
     ] },
   { name: 'Rybníček', par: 1, poly: RECT, tee: [50, 142], cup: [50, 22],
-    zones: [{ t: 'water', shape: 'ellipse', x: 50, y: 84, rx: 25, ry: 20 }],
+    zones: [                                         // dvě jezírka křížem – rovně to nejde
+      { t: 'water', shape: 'poly', pts: oval(50, 82, 31, 6.5, 0.6) },
+      { t: 'water', shape: 'poly', pts: oval(50, 82, 31, 6.5, -0.6) },
+    ],
     obs: [{ t: 'rock', x: 21, y: 50, r: 3.4 }, { t: 'rock', x: 79, y: 118, r: 3.4 }] },
   { name: 'Mlýnek', par: 1,
     poly: [[8, 8], [92, 8], [92, 56], [76, 64], [76, 96], [92, 104], [92, 152], [8, 152], [8, 104], [24, 96], [24, 64], [8, 56]],
     tee: [50, 142], cup: [50, 20],
-    obs: [{ t: 'spinner', x: 50, y: 80, len: 15, arms: 4, r: 1.4, w: 0.022 }] },
+    obs: [{ t: 'spinner', x: 50, y: 80, len: 23, arms: 4, r: 1.4, w: 0.02 }] },   // ramena až ke krajům – nutno časovat
   { name: 'Zatáčka', par: 1, poly: [[8, 152], [54, 152], [54, 62], [92, 62], [92, 8], [8, 8]],
     tee: [31, 142], cup: [78, 35],
     zones: [{ t: 'boost', x: 23, y: 92, w: 16, h: 20, dir: [0, -1] }],
@@ -118,11 +130,11 @@ const HOLES = [
     ] },
   { name: 'Kopečky', par: 1, poly: RECT, tee: [50, 142], cup: [50, 20],
     zones: [
-      { t: 'hill', x: 63, y: 112, r: 17, k: 0.045 },
-      { t: 'hill', x: 37, y: 80, r: 17, k: 0.045 },
-      { t: 'hill', x: 63, y: 48, r: 17, k: 0.045 },
+      { t: 'hill', x: 36, y: 114, rx: 42, ry: 16, k: 0.09 },  // široké kopce přes celou šířku
+      { t: 'hill', x: 64, y: 80, rx: 42, ry: 16, k: 0.09 },
+      { t: 'hill', x: 36, y: 46, rx: 42, ry: 16, k: 0.09 },
     ],
-    obs: [{ t: 'molehill', x: 21, y: 118, r: 3.2 }, { t: 'molehill', x: 80, y: 78, r: 3.2 }, { t: 'molehill', x: 24, y: 40, r: 3.2 }] },
+    obs: [{ t: 'molehill', x: 80, y: 114, r: 3.2 }, { t: 'molehill', x: 20, y: 80, r: 3.2 }, { t: 'molehill', x: 80, y: 46, r: 3.2 }] },
   { name: 'Lesík', par: 1, poly: [[52, 152], [92, 152], [92, 60], [48, 60], [48, 8], [8, 8], [8, 104], [52, 104]],
     tee: [72, 142], cup: [28, 22],
     zones: [{ t: 'sand', shape: 'ellipse', x: 19, y: 95, rx: 10, ry: 7 }],
@@ -352,12 +364,12 @@ function zonePath(z) {
   const p = new Path2D();
   if (z.shape === 'ellipse') p.ellipse(z.x, z.y, z.rx, z.ry, 0, 0, TAU);
   else if (z.shape === 'poly') return polyPath(z.pts);
-  else if (z.t === 'hill') p.arc(z.x, z.y, z.r, 0, TAU);
+  else if (z.t === 'hill') p.ellipse(z.x, z.y, z.rx ?? z.r, z.ry ?? z.r, 0, 0, TAU);
   else rrect(p, z.x, z.y, z.w, z.h, z.r ?? 2);
   return p;
 }
 function inZone(z, x, y) {
-  if (z.t === 'hill') return Math.hypot(x - z.x, y - z.y) < z.r;
+  if (z.t === 'hill') return Math.hypot((x - z.x) / (z.rx ?? z.r), (y - z.y) / (z.ry ?? z.r)) < 1;
   if (z.shape === 'ellipse') { const a = (x - z.x) / z.rx, b = (y - z.y) / z.ry; return a * a + b * b <= 1; }
   if (z.shape === 'poly') return pointInPoly(x, y, z.pts);
   return x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h;
@@ -781,10 +793,12 @@ function physics() {
     if (!inZone(z, ball.x, ball.y)) continue;
     if (z.t === 'sand') fric = SAND_FRICTION;
     else if (z.t === 'hill') {
-      let dx = ball.x - z.x, dy = ball.y - z.y, d = Math.hypot(dx, dy);
-      if (d < 0.01) { dx = 1; dy = 0; d = 1; }
-      const f = z.k * (1 - d / z.r) + 0.004;
-      ball.vx += (dx / d) * f; ball.vy += (dy / d) * f; forced = true;
+      const rx = z.rx ?? z.r, ry = z.ry ?? z.r;          // svah směřuje od vrcholu (i u protáhlého kopce)
+      const u = (ball.x - z.x) / rx, v = (ball.y - z.y) / ry, d = Math.hypot(u, v);
+      let gx = u / rx, gy = v / ry, gl = Math.hypot(gx, gy);
+      if (gl < 1e-6) { gx = 1; gy = 0; gl = 1; }
+      const f = z.k * (1 - d) + 0.004;
+      ball.vx += (gx / gl) * f; ball.vy += (gy / gl) * f; forced = true;
     } else if (z.t === 'boost') {
       ball.vx += z.dir[0] * BOOST_ACC; ball.vy += z.dir[1] * BOOST_ACC; forced = true;
     }
@@ -1043,16 +1057,21 @@ function drawZoneStatic(c, z, rng) {
       }
     }
   } else if (z.t === 'hill') {
-    const g = c.createRadialGradient(z.x - z.r * 0.25, z.y - z.r * 0.3, z.r * 0.05, z.x, z.y, z.r);
-    g.addColorStop(0, 'rgba(255,255,210,0.32)'); g.addColorStop(0.55, 'rgba(255,255,255,0.08)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-    c.fillStyle = g; c.fill(z.path);
-    const g2 = c.createRadialGradient(z.x + z.r * 0.35, z.y + z.r * 0.4, 0, z.x + z.r * 0.2, z.y + z.r * 0.25, z.r * 0.9);
-    g2.addColorStop(0, 'rgba(0,40,0,0.16)'); g2.addColorStop(1, 'rgba(0,40,0,0)');
-    c.save(); c.clip(z.path); c.fillStyle = g2; c.fill(z.path); c.restore();
+    const rx = z.rx ?? z.r, ry = z.ry ?? z.r;
+    c.save();
+    c.translate(z.x, z.y); c.scale(rx, ry);            // kreslíme v jednotkovém kruhu
+    const g = c.createRadialGradient(-0.25, -0.3, 0.05, 0, 0, 1);
+    g.addColorStop(0, 'rgba(255,255,210,0.34)'); g.addColorStop(0.55, 'rgba(255,255,255,0.09)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; circle(c, 0, 0, 1); c.fill();
+    const g2 = c.createRadialGradient(0.35, 0.4, 0, 0.2, 0.25, 0.9);
+    g2.addColorStop(0, 'rgba(0,40,0,0.18)'); g2.addColorStop(1, 'rgba(0,40,0,0)');
+    c.fillStyle = g2; circle(c, 0, 0, 1); c.fill();
+    c.lineWidth = 0.35 / Math.min(rx, ry);
     for (const k of [0.3, 0.6, 0.9]) {
-      c.strokeStyle = `rgba(255,255,255,${0.16 - k * 0.09})`; c.lineWidth = 0.35;
-      circle(c, z.x, z.y, z.r * k); c.stroke();
+      c.strokeStyle = `rgba(255,255,255,${0.17 - k * 0.09})`;
+      circle(c, 0, 0, k); c.stroke();
     }
+    c.restore();
   } else if (z.t === 'boost') {
     c.fillStyle = 'rgba(28,38,44,0.9)'; c.fill(z.path);
     c.strokeStyle = '#ffd34d'; c.lineWidth = 0.5; c.stroke(z.path);
